@@ -27,7 +27,7 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 - [x] Backend: `anthropic-api` — direct fetch to Messages API, key from SecretStorage (command `talkthrough.setApiKey`).
 - [x] Backend auto-detection + `talkthrough.backend` setting.
 - [x] Generation prompt v1 in `prompts/tour.md`: overview-first ordering, grouped by concern, colleague-presenting tone, strict JSON-only output, 2 few-shot examples. Keep prompt in a standalone file for fast iteration.
-- [ ] Wire command: run collector → backend → validated TourScript → for now, dump the script into an output channel and show segment count.
+- [x] Wire command: run collector → backend → validated TourScript → for now, dump the script into an output channel and show segment count.
 
 ⛔ **REVIEW CHECKPOINT 1** — Human runs it on a real repo with a real agent changeset and reads the generated TourScript JSON. Quality bar: ordering makes sense, narration sounds like a presenter, line ranges point at the right code. Expect 2–3 prompt iterations here — do them inside this checkpoint with the human judging output. Approve to continue.
 

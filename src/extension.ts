@@ -1,13 +1,19 @@
 import * as vscode from 'vscode';
+import { explainChanges } from './commands/explainChanges.js';
 import { promptForApiKey } from './commands/setApiKey.js';
 import { PlayerViewProvider } from './player/playerViewProvider.js';
 
 export function activate(context: vscode.ExtensionContext): void {
+  const output = vscode.window.createOutputChannel('Talkthrough');
+
   context.subscriptions.push(
+    output,
     vscode.commands.registerCommand('talkthrough.explainChanges', () => {
-      void vscode.window.showInformationMessage(
-        'Talkthrough: tour generation is not wired up yet.',
-      );
+      void explainChanges({
+        extensionUri: context.extensionUri,
+        secrets: context.secrets,
+        output,
+      });
     }),
     vscode.commands.registerCommand('talkthrough.setApiKey', () => {
       void promptForApiKey(context.secrets);
@@ -21,5 +27,6 @@ export function activate(context: vscode.ExtensionContext): void {
 }
 
 export function deactivate(): void {
-  // Nothing to clean up yet.
+  // Child processes are bound to a CancellationToken that VS Code cancels when
+  // the progress notification closes; nothing outlives deactivation yet.
 }
