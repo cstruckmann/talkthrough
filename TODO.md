@@ -22,7 +22,7 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 
 - [x] `ChangesetCollector`: get `git diff <base>...HEAD` (use `simple-git` or child_process), configurable `talkthrough.baseRef`, fallback to working-tree-vs-HEAD when no commits ahead. Handle: not-a-repo (readable error), empty diff (info message), binary files (skip), per-file truncation over threshold with a note in the payload.
 - [x] Define TourScript JSON schema (per PROJECT.md) + validator (zod). Unit tests: valid/invalid fixtures.
-- [ ] Backend interface `TourBackend.generateTour(changeset, transcript?)`.
+- [x] Backend interface `TourBackend.generateTour(changeset, transcript?)`.
 - [ ] Backend: `claude-cli` — detect `claude` on PATH, invoke `claude -p --output-format json` with the generation prompt; parse, validate, one retry-with-error on schema failure. Timeout + stderr surfaced on failure.
 - [ ] Backend: `anthropic-api` — direct fetch to Messages API, key from SecretStorage (command `talkthrough.setApiKey`).
 - [ ] Backend auto-detection + `talkthrough.backend` setting.
