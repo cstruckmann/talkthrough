@@ -20,7 +20,25 @@
         "title": "Explain recent changes",
         "category": "Talkthrough"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "talkthrough",
+          "title": "Talkthrough",
+          "icon": "$(broadcast)"
+        }
+      ]
+    },
+    "views": {
+      "talkthrough": [
+        {
+          "id": "talkthrough.player",
+          "name": "Player",
+          "type": "webview"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run build",

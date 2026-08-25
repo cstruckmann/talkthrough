@@ -1,0 +1,45 @@
+/*
+ * All colors and fonts come from VS Code theme variables so the panel matches
+ * whatever theme the user has active, including high-contrast themes.
+ */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
+  background-color: var(--vscode-panel-background);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100vh;
+  padding: 16px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.empty-state h1 {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.empty-state p {
+  margin: 0;
+  max-width: 42ch;
+  color: var(--vscode-descriptionForeground);
+}
+
+.empty-state code {
+  font-family: var(--vscode-editor-font-family);
+  color: var(--vscode-textPreformat-foreground);
+  background-color: var(--vscode-textPreformat-background);
+  padding: 1px 4px;
+  border-radius: 3px;
+}

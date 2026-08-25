@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { PlayerViewProvider } from './player/playerViewProvider.js';
 
 export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
@@ -7,6 +8,11 @@ export function activate(context: vscode.ExtensionContext): void {
         'Talkthrough: tour generation is not wired up yet.',
       );
     }),
+    vscode.window.registerWebviewViewProvider(
+      PlayerViewProvider.viewType,
+      new PlayerViewProvider(context.extensionUri),
+      { webviewOptions: { retainContextWhenHidden: true } },
+    ),
   );
 }
 
