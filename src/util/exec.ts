@@ -10,6 +10,9 @@ export interface ExecOptions {
   maxBuffer?: number;
   /** Exit codes to treat as success. `git diff --no-index` exits 1 on differences. */
   allowedExitCodes?: number[];
+  /** Written to the child's stdin, which is then closed. Use for large inputs
+   *  that would overflow the command line. */
+  stdin?: string;
 }
 
 export interface ExecResult {
@@ -49,7 +52,7 @@ export function run(command: string, args: string[], options: ExecOptions): Prom
   });
 
   return new Promise<ExecResult>((resolve, reject) => {
-    execFile(
+    const child = execFile(
       command,
       args,
       {
@@ -91,6 +94,14 @@ export function run(command: string, args: string[], options: ExecOptions): Prom
         );
       },
     );
+
+    if (options.stdin !== undefined) {
+      child.stdin?.on('error', () => {
+        // The child may exit before reading its input; the exit code tells the
+        // real story, so a broken pipe here is not worth surfacing.
+      });
+      child.stdin?.end(options.stdin);
+    }
   }).finally(() => {
     cancelSubscription?.dispose();
   });
