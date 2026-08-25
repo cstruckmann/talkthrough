@@ -23,6 +23,11 @@
         "command": "talkthrough.explainChanges",
         "title": "Explain recent changes",
         "category": "Talkthrough"
+      },
+      {
+        "command": "talkthrough.setApiKey",
+        "title": "Set API key",
+        "category": "Talkthrough"
       }
     ],
     "viewsContainers": {

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { promptForApiKey } from './commands/setApiKey.js';
 import { PlayerViewProvider } from './player/playerViewProvider.js';
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -7,6 +8,9 @@ export function activate(context: vscode.ExtensionContext): void {
       void vscode.window.showInformationMessage(
         'Talkthrough: tour generation is not wired up yet.',
       );
+    }),
+    vscode.commands.registerCommand('talkthrough.setApiKey', () => {
+      void promptForApiKey(context.secrets);
     }),
     vscode.window.registerWebviewViewProvider(
       PlayerViewProvider.viewType,
