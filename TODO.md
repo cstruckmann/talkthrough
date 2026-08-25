@@ -35,10 +35,10 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 
 ## Phase 2 — Editor choreography (silent tour)
 
-- [ ] `EditorChoreographer`: for a segment — open file, `revealRange` centered, apply highlight `TextEditorDecorationType` (ThemeColor-based), clear previous decorations. Handle stale line ranges (file changed since generation): clamp + warn.
-- [ ] Tour state machine in the host: idle → playing(segmentIndex) → paused → done; commands next/prev/stop.
-- [ ] Temporary controls (before audio exists): status-bar buttons or quick-pick to step through segments manually.
-- [ ] Optional `talkthrough.openDiffView`: show `vscode.diff` for the segment's file instead of the plain document.
+- [x] `EditorChoreographer`: for a segment — open file, `revealRange` centered, apply highlight `TextEditorDecorationType` (ThemeColor-based), clear previous decorations. Handle stale line ranges (file changed since generation): clamp + warn.
+- [x] Tour state machine in the host: idle → playing(segmentIndex) → paused → done; commands next/prev/stop.
+- [x] Temporary controls (before audio exists): status-bar buttons or quick-pick to step through segments manually.
+- [x] Optional `talkthrough.openDiffView`: show `vscode.diff` for the segment's file instead of the plain document.
 
 ⛔ **REVIEW CHECKPOINT 2** — Human steps through a tour silently: correct files open, correct lines highlighted, stepping feels smooth, no decoration leftovers. Approve to continue.
 

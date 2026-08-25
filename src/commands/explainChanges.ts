@@ -7,6 +7,7 @@ import { collectChangeset } from '../changeset/collector.js';
 import { ChangesetError } from '../changeset/types.js';
 import { loadPromptTemplate } from '../prompt/loadTemplate.js';
 import type { TourScript } from '../tour/schema.js';
+import type { TourSession } from '../tour/tourSession.js';
 
 /**
  * Per-file diff budget. Large enough to carry a substantial change in full,
@@ -18,6 +19,7 @@ export interface ExplainChangesDeps {
   extensionUri: vscode.Uri;
   secrets: vscode.SecretStorage;
   output: vscode.OutputChannel;
+  session: TourSession;
 }
 
 export async function explainChanges(deps: ExplainChangesDeps): Promise<void> {
@@ -47,10 +49,13 @@ export async function explainChanges(deps: ExplainChangesDeps): Promise<void> {
     }
 
     writeToOutput(deps.output, tour);
+    await deps.session.start(tour, cwd);
+
     const count = tour.segments.length;
     void vscode.window
       .showInformationMessage(
-        `Talkthrough: generated "${tour.title}" — ${count} segment${count === 1 ? '' : 's'}.`,
+        `Talkthrough: "${tour.title}" — ${count} segment${count === 1 ? '' : 's'}. ` +
+          'Step through it from the status bar.',
         'Show script',
       )
       .then((choice) => {

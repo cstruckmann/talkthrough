@@ -28,6 +28,26 @@
         "command": "talkthrough.setApiKey",
         "title": "Set API key",
         "category": "Talkthrough"
+      },
+      {
+        "command": "talkthrough.nextSegment",
+        "title": "Next segment",
+        "category": "Talkthrough"
+      },
+      {
+        "command": "talkthrough.previousSegment",
+        "title": "Previous segment",
+        "category": "Talkthrough"
+      },
+      {
+        "command": "talkthrough.goToSegment",
+        "title": "Go to segment\u2026",
+        "category": "Talkthrough"
+      },
+      {
+        "command": "talkthrough.stopTour",
+        "title": "Stop tour",
+        "category": "Talkthrough"
       }
     ],
     "viewsContainers": {
@@ -70,8 +90,33 @@
           "type": "string",
           "default": "",
           "markdownDescription": "Git ref that changes are compared against, for example `main` or `origin/main`. Leave empty to detect your default branch automatically. When your branch has no commits beyond the base, Talkthrough explains your uncommitted working-tree changes instead."
+        },
+        "talkthrough.openDiffView": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Open each segment as a diff against the base ref instead of the plain file."
         }
       }
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "talkthrough.nextSegment",
+          "when": "talkthrough.tourActive"
+        },
+        {
+          "command": "talkthrough.previousSegment",
+          "when": "talkthrough.tourActive"
+        },
+        {
+          "command": "talkthrough.goToSegment",
+          "when": "talkthrough.tourActive"
+        },
+        {
+          "command": "talkthrough.stopTour",
+          "when": "talkthrough.tourActive"
+        }
+      ]
     }
   },
   "scripts": {
