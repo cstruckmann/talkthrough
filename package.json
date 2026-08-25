@@ -42,6 +42,16 @@
           "type": "webview"
         }
       ]
+    },
+    "configuration": {
+      "title": "Talkthrough",
+      "properties": {
+        "talkthrough.baseRef": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Git ref that changes are compared against, for example `main` or `origin/main`. Leave empty to detect your default branch automatically. When your branch has no commits beyond the base, Talkthrough explains your uncommitted working-tree changes instead."
+        }
+      }
     }
   },
   "scripts": {

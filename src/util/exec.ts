@@ -1,0 +1,97 @@
+import { execFile } from 'node:child_process';
+import type * as vscode from 'vscode';
+
+export interface ExecOptions {
+  cwd: string;
+  timeoutMs?: number;
+  /** Cancels the child process when the token fires. */
+  token?: vscode.CancellationToken;
+  /** Diffs can be large; default 64 MB. */
+  maxBuffer?: number;
+  /** Exit codes to treat as success. `git diff --no-index` exits 1 on differences. */
+  allowedExitCodes?: number[];
+}
+
+export interface ExecResult {
+  stdout: string;
+  stderr: string;
+}
+
+export class ExecError extends Error {
+  constructor(
+    message: string,
+    public readonly stderr: string,
+    public readonly cause: NodeJS.ErrnoException,
+  ) {
+    super(message);
+    this.name = 'ExecError';
+  }
+}
+
+export class ExecCancelledError extends Error {
+  constructor() {
+    super('Cancelled.');
+    this.name = 'ExecCancelledError';
+  }
+}
+
+const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_MAX_BUFFER = 64 * 1024 * 1024;
+
+/**
+ * Runs a command, always bounded by a timeout and always killable through a
+ * CancellationToken. Never invokes a shell, so arguments need no escaping.
+ */
+export function run(command: string, args: string[], options: ExecOptions): Promise<ExecResult> {
+  const controller = new AbortController();
+  const cancelSubscription = options.token?.onCancellationRequested(() => {
+    controller.abort();
+  });
+
+  return new Promise<ExecResult>((resolve, reject) => {
+    execFile(
+      command,
+      args,
+      {
+        cwd: options.cwd,
+        timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+        maxBuffer: options.maxBuffer ?? DEFAULT_MAX_BUFFER,
+        signal: controller.signal,
+        windowsHide: true,
+        encoding: 'utf8',
+      },
+      (error, stdout, stderr) => {
+        if (!error) {
+          resolve({ stdout, stderr });
+          return;
+        }
+        if (options.token?.isCancellationRequested) {
+          reject(new ExecCancelledError());
+          return;
+        }
+        const err = error as NodeJS.ErrnoException;
+        if (typeof err.code === 'number' && options.allowedExitCodes?.includes(err.code)) {
+          resolve({ stdout, stderr });
+          return;
+        }
+        if (err.code === 'ENOENT') {
+          reject(new ExecError(`${command} was not found on your PATH.`, stderr, err));
+          return;
+        }
+        if (err.name === 'AbortError') {
+          reject(new ExecCancelledError());
+          return;
+        }
+        reject(
+          new ExecError(
+            `${command} ${args.join(' ')} failed: ${stderr.trim() || err.message}`,
+            stderr,
+            err,
+          ),
+        );
+      },
+    );
+  }).finally(() => {
+    cancelSubscription?.dispose();
+  });
+}
