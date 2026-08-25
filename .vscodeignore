@@ -1,0 +1,16 @@
+.vscode/**
+.github/**
+src/**
+node_modules/**
+out/**
+**/*.map
+**/*.ts
+esbuild.js
+eslint.config.mjs
+tsconfig.json
+vitest.config.ts
+.gitignore
+.vscodeignore
+TODO.md
+PROJECT.md
+CLAUDE.md

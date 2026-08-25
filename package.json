@@ -1,0 +1,36 @@
+{
+  "name": "talkthrough",
+  "displayName": "Talkthrough",
+  "description": "Voice-narrated walkthroughs of AI agent code changes, inside VS Code.",
+  "version": "0.0.1",
+  "publisher": "talkthrough-dev",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {},
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.js --production",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.9.1",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^3.2.7"
+  }
+}
