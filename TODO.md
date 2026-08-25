@@ -25,7 +25,7 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 - [x] Backend interface `TourBackend.generateTour(changeset, transcript?)`.
 - [x] Backend: `claude-cli` — detect `claude` on PATH, invoke `claude -p --output-format json` with the generation prompt; parse, validate, one retry-with-error on schema failure. Timeout + stderr surfaced on failure.
 - [x] Backend: `anthropic-api` — direct fetch to Messages API, key from SecretStorage (command `talkthrough.setApiKey`).
-- [ ] Backend auto-detection + `talkthrough.backend` setting.
+- [x] Backend auto-detection + `talkthrough.backend` setting.
 - [x] Generation prompt v1 in `prompts/tour.md`: overview-first ordering, grouped by concern, colleague-presenting tone, strict JSON-only output, 2 few-shot examples. Keep prompt in a standalone file for fast iteration.
 - [ ] Wire command: run collector → backend → validated TourScript → for now, dump the script into an output channel and show segment count.
 

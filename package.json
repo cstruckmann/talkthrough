@@ -51,6 +51,21 @@
     "configuration": {
       "title": "Talkthrough",
       "properties": {
+        "talkthrough.backend": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "claude-cli",
+            "anthropic-api"
+          ],
+          "enumDescriptions": [
+            "Use whichever backend is ready, preferring a CLI you already installed.",
+            "Use your own installed claude CLI. Talkthrough never installs it or handles your login.",
+            "Call the Anthropic API with a key you store via \"Talkthrough: Set API key\"."
+          ],
+          "default": "auto",
+          "markdownDescription": "Which backend generates the tour. `auto` prefers a signed-in CLI you already have, then falls back to an API key."
+        },
         "talkthrough.baseRef": {
           "type": "string",
           "default": "",
