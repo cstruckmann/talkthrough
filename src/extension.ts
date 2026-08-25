@@ -1,7 +1,13 @@
 import * as vscode from 'vscode';
 
-export function activate(_context: vscode.ExtensionContext): void {
-  // Contributions are registered in later phases.
+export function activate(context: vscode.ExtensionContext): void {
+  context.subscriptions.push(
+    vscode.commands.registerCommand('talkthrough.explainChanges', () => {
+      void vscode.window.showInformationMessage(
+        'Talkthrough: tour generation is not wired up yet.',
+      );
+    }),
+  );
 }
 
 export function deactivate(): void {

@@ -13,7 +13,15 @@
     "Other"
   ],
   "main": "./dist/extension.js",
-  "contributes": {},
+  "contributes": {
+    "commands": [
+      {
+        "command": "talkthrough.explainChanges",
+        "title": "Explain recent changes",
+        "category": "Talkthrough"
+      }
+    ]
+  },
   "scripts": {
     "vscode:prepublish": "npm run build",
     "build": "node esbuild.js --production",

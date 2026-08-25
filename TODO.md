@@ -10,7 +10,7 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 
 - [x] Initialize extension with `yo code` (TypeScript, esbuild), name `talkthrough`, publisher placeholder.
 - [x] Repo hygiene: MIT LICENSE, .gitignore, README stub, `npm run watch` + F5 debug launch working.
-- [ ] Register command `talkthrough.explainChanges` ("Talkthrough: Explain recent changes") showing a hello-world notification.
+- [x] Register command `talkthrough.explainChanges` ("Talkthrough: Explain recent changes") showing a hello-world notification.
 - [ ] Contribute an empty webview view `talkthrough.player` in the bottom panel container; renders static "Talkthrough" HTML with theme variables.
 - [ ] CI: GitHub Actions running lint + typecheck + tests on push.
 
