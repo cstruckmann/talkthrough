@@ -3,8 +3,12 @@
   "displayName": "Talkthrough",
   "description": "Voice-narrated walkthroughs of AI agent code changes, inside VS Code.",
   "version": "0.0.1",
-  "publisher": "talkthrough-dev",
+  "publisher": "cstruckmann",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cstruckmann/talkthrough.git"
+  },
   "private": true,
   "engines": {
     "vscode": "^1.90.0"
