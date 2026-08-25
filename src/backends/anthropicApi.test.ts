@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { describeHttpError, extractText } from './anthropicApi.js';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type * as vscode from 'vscode';
+import { AnthropicApiBackend, describeHttpError, extractText } from './anthropicApi.js';
 import { BackendError } from './types.js';
 
 const body = (value: unknown) => JSON.stringify(value);
@@ -98,5 +99,115 @@ describe('describeHttpError', () => {
 
   it('still describes a 4xx when the body carries no error message', () => {
     expect(describeHttpError(400, 'not json')).toContain('HTTP 400');
+  });
+});
+
+describe('AnthropicApiBackend cancellation', () => {
+  const secrets = {
+    get: async () => 'sk-test-key',
+    store: async () => undefined,
+    delete: async () => undefined,
+    onDidChange: () => ({ dispose: () => undefined }),
+  } as unknown as vscode.SecretStorage;
+
+  /** A CancellationToken that fires when `cancel()` is called. */
+  const makeToken = () => {
+    const listeners: Array<() => void> = [];
+    const token = {
+      isCancellationRequested: false,
+      onCancellationRequested: (listener: () => void) => {
+        listeners.push(listener);
+        return { dispose: () => undefined };
+      },
+    };
+    return {
+      token: token as unknown as vscode.CancellationToken,
+      cancel: () => {
+        token.isCancellationRequested = true;
+        listeners.forEach((listener) => listener());
+      },
+    };
+  };
+
+  const changeset = {
+    repoRoot: '/repo',
+    baseRef: 'main',
+    mode: 'range' as const,
+    files: [],
+    totalAdditions: 0,
+    totalDeletions: 0,
+    truncatedFileCount: 0,
+    binaryFileCount: 0,
+  };
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('reports cancellation when the token fires while the body is still arriving', async () => {
+    const { token, cancel } = makeToken();
+
+    // Headers have arrived, so fetch has already resolved; the cancel lands
+    // during the body read, which is the window the first implementation missed.
+    vi.stubGlobal('fetch', async () =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        text: async () => {
+          cancel();
+          return JSON.stringify({
+            content: [{ type: 'text', text: '{"version":1}' }],
+            stop_reason: 'end_turn',
+          });
+        },
+      } as unknown as Response),
+    );
+
+    const backend = new AnthropicApiBackend('template', secrets);
+
+    await expect(backend.generateTour({ changeset, token })).rejects.toMatchObject({
+      kind: 'cancelled',
+    });
+  });
+
+  it('does not treat a normal response as cancelled', async () => {
+    const { token } = makeToken();
+
+    vi.stubGlobal('fetch', async () =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        text: async () =>
+          JSON.stringify({
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  version: 1,
+                  title: 'A tour',
+                  summary: 'A summary.',
+                  segments: [
+                    {
+                      id: 'seg-1',
+                      file: 'src/a.ts',
+                      startLine: 1,
+                      endLine: 2,
+                      narration: 'Something changed.',
+                      kind: 'change',
+                    },
+                  ],
+                }),
+              },
+            ],
+            stop_reason: 'end_turn',
+          }),
+      } as unknown as Response),
+    );
+
+    const backend = new AnthropicApiBackend('template', secrets);
+
+    await expect(backend.generateTour({ changeset, token })).resolves.toMatchObject({
+      title: 'A tour',
+    });
   });
 });

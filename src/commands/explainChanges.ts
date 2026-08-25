@@ -99,11 +99,16 @@ async function runTour(
       `base ${changeset.baseRef} (${changeset.mode}), backend ${backend.id}.`,
   );
 
-  return backend.generateTour({
+  const tour = await backend.generateTour({
     changeset,
     token,
     onProgress: (message) => progress.report({ message }),
   });
+
+  // A backend may finish despite the cancel — a CLI that had already written
+  // its answer, an API response already in flight. Without this the user
+  // cancels and still gets a success notification.
+  return token.isCancellationRequested ? undefined : tour;
 }
 
 function resolveWorkspaceFolder(): string | undefined {

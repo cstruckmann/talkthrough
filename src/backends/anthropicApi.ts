@@ -67,9 +67,12 @@ export class AnthropicApiBackend implements TourBackend {
     const controller = new AbortController();
     const subscription = token?.onCancellationRequested(() => controller.abort());
 
-    let response: Response;
+    // The subscription must outlive the body read, not just the fetch: fetch
+    // resolves once the headers arrive, and a long tour is still streaming in
+    // after that. Disposing early would leave cancel doing nothing for most of
+    // the request's life.
     try {
-      response = await fetch(ENDPOINT, {
+      const response = await fetch(ENDPOINT, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
@@ -83,7 +86,26 @@ export class AnthropicApiBackend implements TourBackend {
         }),
         signal: controller.signal,
       });
+
+      const body = await response.text();
+
+      if (token?.isCancellationRequested) {
+        throw new BackendError('Tour generation was cancelled.', 'cancelled');
+      }
+
+      if (!response.ok) {
+        throw new BackendError(
+          describeHttpError(response.status, body),
+          'invocation-failed',
+          body,
+        );
+      }
+
+      return extractText(body);
     } catch (error) {
+      if (error instanceof BackendError) {
+        throw error;
+      }
       if (token?.isCancellationRequested) {
         throw new BackendError('Tour generation was cancelled.', 'cancelled');
       }
@@ -94,13 +116,6 @@ export class AnthropicApiBackend implements TourBackend {
     } finally {
       subscription?.dispose();
     }
-
-    const body = await response.text();
-    if (!response.ok) {
-      throw new BackendError(describeHttpError(response.status, body), 'invocation-failed', body);
-    }
-
-    return extractText(body);
   }
 }
 
