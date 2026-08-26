@@ -1,3 +1,6 @@
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type * as vscode from 'vscode';
 import { assemblePrompt } from '../prompt/assemble.js';
 import type { TourScript } from '../tour/schema.js';
@@ -11,15 +14,37 @@ import {
   type TourBackend,
 } from './types.js';
 
-const TIMEOUT_MS = 240_000;
+/**
+ * A ceiling for a wedged process, not an expected wait. Measured rather than
+ * guessed: a warm run of a two-file changeset took thirteen seconds, but the
+ * first invocation on this machine took over six minutes while the CLI retried
+ * a model refresh. Being generous costs nothing when nothing goes wrong.
+ */
+const TIMEOUT_MS = 900_000;
 
 /**
- * Pinned deliberately, and kept minimal.
+ * Pinned deliberately, and verified against codex-cli 0.149.1.
  *
- * `--skip-git-repo-check` matters because the prompt already carries the diff:
- * the CLI does not need to be standing in the repository to write about it.
+ * `--skip-git-repo-check` because the prompt already carries the diff — the CLI
+ * does not need to be standing in the repository to write about it.
+ * `--color never` keeps terminal escapes out of the answer at the source.
+ * `-s read-only` because this asks for JSON, not for edits: a tour generation
+ * has no business modifying the workspace it is describing.
+ * A trailing `-` makes it read the prompt from stdin.
  */
-const ARGS = ['exec', '--skip-git-repo-check', '-'];
+export function argsFor(lastMessagePath: string): string[] {
+  return [
+    'exec',
+    '--skip-git-repo-check',
+    '--color',
+    'never',
+    '-s',
+    'read-only',
+    '-o',
+    lastMessagePath,
+    '-',
+  ];
+}
 
 /**
  * Drives the user's own installed Codex CLI.
@@ -77,8 +102,14 @@ export class CodexCliBackend implements TourBackend {
     cwd: string,
     token: vscode.CancellationToken | undefined,
   ): Promise<string> {
+    // The CLI writes its banner and progress to stderr and can be asked to put
+    // just the final message in a file. Reading that file beats scraping a
+    // stream that also carries whatever the tool felt like printing.
+    const directory = await mkdtemp(join(tmpdir(), 'talkthrough-codex-'));
+    const lastMessagePath = join(directory, 'last-message.txt');
+
     try {
-      const { stdout } = await run('codex', ARGS, {
+      const { stdout } = await run('codex', argsFor(lastMessagePath), {
         cwd,
         timeoutMs: TIMEOUT_MS,
         // The prompt carries a whole diff, so it goes over stdin rather than
@@ -87,7 +118,10 @@ export class CodexCliBackend implements TourBackend {
         ...(token ? { token } : {}),
       });
 
-      return cleanCliOutput(stdout);
+      const lastMessage = await readFile(lastMessagePath, 'utf8').catch(() => '');
+      // Fall back to stdout if the file is missing or empty, so a future
+      // release that drops the flag degrades instead of breaking.
+      return lastMessage.trim() !== '' ? lastMessage.trim() : cleanCliOutput(stdout);
     } catch (error) {
       if (error instanceof ExecCancelledError) {
         throw new BackendError('Tour generation was cancelled.', 'cancelled');
@@ -100,6 +134,8 @@ export class CodexCliBackend implements TourBackend {
         );
       }
       throw error;
+    } finally {
+      await rm(directory, { recursive: true, force: true });
     }
   }
 }

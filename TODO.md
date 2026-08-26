@@ -74,7 +74,7 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 
 ## Phase 5 — Hardening & second backend
 
-- [x] Backend: `codex-cli` — detect `codex` on PATH, invoke `codex exec` with JSON-only prompt (final message on stdout), same validate/retry path.
+- [x] Backend: `codex-cli` — detect `codex` on PATH, invoke `codex exec` with JSON-only prompt, same validate/retry path. *(Verified end to end against codex-cli 0.149.1: valid TourScript, line ranges correct.)*
 - [x] Large-changeset strategy: over N changed files → two-pass generation (per-file summaries → tour over summaries). Verify on a 50-file diff.
 - [x] Optional Claude Code transcript enrichment (`talkthrough.useAgentTranscript`): locate latest session JSONL for the workspace, extract assistant reasoning, feed to generator. Degrade gracefully if absent.
 - [x] Concurrency & cancellation: cancel a running generation/synthesis when a new tour starts or VS Code closes; no orphaned child processes.
