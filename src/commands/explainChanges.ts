@@ -9,6 +9,7 @@ import { TtsError } from '../tts/types.js';
 import { loadPromptTemplate } from '../prompt/loadTemplate.js';
 import type { TourScript } from '../tour/schema.js';
 import type { TourSession } from '../tour/tourSession.js';
+import type { PlayerViewProvider } from '../player/playerViewProvider.js';
 
 /**
  * Per-file diff budget. Large enough to carry a substantial change in full,
@@ -21,6 +22,7 @@ export interface ExplainChangesDeps {
   secrets: vscode.SecretStorage;
   output: vscode.OutputChannel;
   session: TourSession;
+  player: PlayerViewProvider;
   /** Chooses a voice and readies synthesis before the tour starts playing. */
   prepareNarration: (tour: TourScript) => Promise<void>;
 }
@@ -68,7 +70,7 @@ export async function explainChanges(deps: ExplainChangesDeps): Promise<void> {
         }
       });
   } catch (error) {
-    reportError(deps.output, error);
+    reportError(deps, error);
   }
 }
 
@@ -134,8 +136,19 @@ function writeToOutput(output: vscode.OutputChannel, tour: TourScript): void {
   output.appendLine(JSON.stringify(tour, null, 2));
 }
 
-function reportError(output: vscode.OutputChannel, error: unknown): void {
+/**
+ * Explains a failure where the user is already looking.
+ *
+ * The panel gets the full explanation and a way out of it; the notification is
+ * kept short, because a wall of text in a toast is read by nobody.
+ */
+function reportError(deps: ExplainChangesDeps, error: unknown): void {
+  const { output, player } = deps;
+
   if (error instanceof ChangesetError) {
+    const guidance = CHANGESET_GUIDANCE[error.kind];
+    player.showError(guidance.title, error.message, guidance.actions);
+
     if (error.kind === 'empty-diff') {
       void vscode.window.showInformationMessage(`Talkthrough: ${error.message}`);
       return;
@@ -148,6 +161,10 @@ function reportError(output: vscode.OutputChannel, error: unknown): void {
     if (error.kind === 'cancelled') {
       return;
     }
+    player.showError('Narration is not available', error.message, [
+      { label: 'Set API key', command: 'talkthrough.setApiKey' },
+      { label: 'Choose voice', command: 'talkthrough.selectVoice' },
+    ]);
     void vscode.window.showErrorMessage(`Talkthrough: ${error.message}`);
     return;
   }
@@ -160,6 +177,15 @@ function reportError(output: vscode.OutputChannel, error: unknown): void {
       output.appendLine('');
       output.appendLine(`Backend output:\n${error.detail}`);
     }
+
+    player.showError(
+      error.kind === 'unavailable' ? 'No backend is ready' : 'The tour could not be generated',
+      error.message,
+      error.kind === 'unavailable'
+        ? [{ label: 'Set API key', command: 'talkthrough.setApiKey' }]
+        : [{ label: 'Show details', command: 'talkthrough.showOutput' }],
+    );
+
     void vscode.window
       .showErrorMessage(`Talkthrough: ${error.message}`, 'Show details')
       .then((choice) => {
@@ -172,5 +198,22 @@ function reportError(output: vscode.OutputChannel, error: unknown): void {
 
   const message = error instanceof Error ? error.message : String(error);
   output.appendLine(`Talkthrough: unexpected failure: ${message}`);
+  player.showError('Something went wrong', message, [
+    { label: 'Show details', command: 'talkthrough.showOutput' },
+  ]);
   void vscode.window.showErrorMessage(`Talkthrough: ${message}`);
 }
+
+/** Per-failure framing, so each dead end says what to do next. */
+const CHANGESET_GUIDANCE: Record<
+  ChangesetError['kind'],
+  { title: string; actions: Array<{ label: string; command: string }> }
+> = {
+  'not-a-repo': { title: 'No git repository here', actions: [] },
+  'no-git': { title: 'git was not found', actions: [] },
+  'empty-diff': { title: 'Nothing to explain', actions: [] },
+  'bad-base-ref': {
+    title: 'That base ref does not exist',
+    actions: [{ label: 'Open settings', command: 'talkthrough.openSettings' }],
+  },
+};

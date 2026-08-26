@@ -12,6 +12,15 @@ import { SystemTtsEngine } from './tts/systemEngine.js';
 import { TourSynthesizer } from './tts/synthesizer.js';
 import type { TtsEngine } from './tts/types.js';
 
+/** Commands the player panel is permitted to invoke through an error action. */
+const PANEL_COMMANDS = new Set([
+  'talkthrough.setApiKey',
+  'talkthrough.selectVoice',
+  'talkthrough.showOutput',
+  'talkthrough.openSettings',
+  'talkthrough.explainChanges',
+]);
+
 export function activate(context: vscode.ExtensionContext): void {
   const output = vscode.window.createOutputChannel('Talkthrough');
   const session = new TourSession(output);
@@ -49,6 +58,13 @@ export function activate(context: vscode.ExtensionContext): void {
         case 'stop':
           void session.dispatch({ type: 'stop' });
           break;
+        case 'runCommand':
+          // Allowlisted: the panel may only invoke this extension's own
+          // commands, never arbitrary ones it was handed.
+          if (PANEL_COMMANDS.has(message.command)) {
+            void vscode.commands.executeCommand(message.command);
+          }
+          break;
         default:
           break;
       }
@@ -65,6 +81,7 @@ export function activate(context: vscode.ExtensionContext): void {
         secrets: context.secrets,
         output,
         session,
+        player,
         prepareNarration: async (tour) => {
           const engine = await resolveEngine(
             engines,
@@ -82,6 +99,12 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand('talkthrough.selectVoice', () => {
       void selectVoice();
+    }),
+    vscode.commands.registerCommand('talkthrough.showOutput', () => {
+      output.show(true);
+    }),
+    vscode.commands.registerCommand('talkthrough.openSettings', () => {
+      void vscode.commands.executeCommand('workbench.action.openSettings', 'talkthrough');
     }),
 
     vscode.commands.registerCommand('talkthrough.nextSegment', () => {

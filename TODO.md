@@ -61,12 +61,12 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 ## Phase 4 — Player UX polish
 
 - [ ] ~~Panel UI: segment list with kind badges~~ — **moved to the sidebar tree view in Phase 2.** The panel keeps the transport and transcript only; revisit only if the two surfaces feel redundant in use.
-- [ ] Live transcript view; current sentence emphasized; sentences clickable to seek within a segment (approximate by character-proportional offset — word timestamps are out of scope).
-- [ ] Progress bar across the whole tour; elapsed/total time.
-- [ ] Keyboard shortcuts (space play/pause, arrows prev/next) while panel focused.
-- [ ] Empty/error states in-panel: no git repo, no diff, backend missing (with "how to fix" links), generation failed.
-- [ ] Theming pass: audit all colors/fonts against `--vscode-*` variables in 3 themes (dark default, light default, one high-contrast).
-- [ ] Settings UI descriptions finalized for all `talkthrough.*` settings.
+- [x] Live transcript view; current sentence emphasized; sentences clickable to seek within a segment (approximate by character-proportional offset — word timestamps are out of scope).
+- [x] Progress bar across the whole tour; elapsed/total time.
+- [x] Keyboard shortcuts (space play/pause, arrows prev/next) while panel focused.
+- [x] Empty/error states in-panel: no git repo, no diff, backend missing (with "how to fix" links), generation failed.
+- [x] Theming pass: audit all colors/fonts against `--vscode-*` variables in 3 themes (dark default, light default, one high-contrast).
+- [x] Settings UI descriptions finalized for all `talkthrough.*` settings.
 
 ⛔ **REVIEW CHECKPOINT 4** — Human evaluates look & feel against "polished coworker" bar in all 3 themes; walks each error state deliberately. Approve to continue.
 

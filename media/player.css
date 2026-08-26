@@ -9,7 +9,7 @@ body {
   font-family: var(--vscode-font-family);
   font-size: var(--vscode-font-size);
   color: var(--vscode-foreground);
-  background-color: var(--vscode-panel-background);
+  background-color: var(--vscode-panel-background, var(--vscode-editor-background));
 }
 
 [hidden] {
@@ -56,7 +56,7 @@ body {
 .empty-state code {
   font-family: var(--vscode-editor-font-family);
   color: var(--vscode-textPreformat-foreground);
-  background-color: var(--vscode-textPreformat-background);
+  background-color: var(--vscode-textPreformat-background, transparent);
   padding: 1px 4px;
   border-radius: 3px;
 }
@@ -82,14 +82,14 @@ body {
   min-width: 32px;
   padding: 6px 10px;
   cursor: pointer;
-  color: var(--vscode-button-secondaryForeground);
-  background-color: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
+  background-color: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
   border: 1px solid transparent;
   border-radius: 4px;
 }
 
 .transport button:hover {
-  background-color: var(--vscode-button-secondaryHoverBackground);
+  background-color: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground));
 }
 
 .transport button:focus-visible {
@@ -117,7 +117,7 @@ body {
   padding: 4px 6px;
   color: var(--vscode-dropdown-foreground);
   background-color: var(--vscode-dropdown-background);
-  border: 1px solid var(--vscode-dropdown-border);
+  border: 1px solid var(--vscode-dropdown-border, transparent);
   border-radius: 4px;
 }
 
@@ -135,6 +135,7 @@ body {
 
 .kind {
   flex: none;
+  border: 1px solid var(--vscode-contrastBorder, transparent);
   font-size: 0.85em;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -146,7 +147,7 @@ body {
 
 .kind[data-kind='caveat'] {
   color: var(--vscode-inputValidation-warningForeground, var(--vscode-foreground));
-  background-color: var(--vscode-inputValidation-warningBackground);
+  background-color: var(--vscode-inputValidation-warningBackground, var(--vscode-badge-background));
 }
 
 .file {
@@ -160,11 +161,109 @@ body {
 .narration {
   margin: 0;
   max-width: 80ch;
-  line-height: 1.55;
+  line-height: 1.6;
+  color: var(--vscode-descriptionForeground);
 }
 
 .status {
   min-height: 1.2em;
   color: var(--vscode-descriptionForeground);
   font-style: italic;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.error-state h1 {
+  margin: 0;
+  font-size: 1.05em;
+  font-weight: 600;
+  color: var(--vscode-inputValidation-errorForeground, var(--vscode-foreground));
+}
+
+.error-state p {
+  margin: 0;
+  max-width: 70ch;
+  line-height: 1.55;
+  color: var(--vscode-descriptionForeground);
+}
+
+.error-state .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.error-state button {
+  font-family: inherit;
+  font-size: inherit;
+  padding: 5px 12px;
+  cursor: pointer;
+  color: var(--vscode-button-foreground);
+  background-color: var(--vscode-button-background);
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
+.error-state button:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+.error-state button:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+
+.time {
+  font-variant-numeric: tabular-nums;
+  color: var(--vscode-descriptionForeground);
+}
+
+.progress {
+  height: 4px;
+  border: 1px solid var(--vscode-contrastBorder, transparent);
+  box-sizing: content-box;
+  border-radius: 2px;
+  background-color: var(--vscode-progressBar-background, var(--vscode-focusBorder));
+  opacity: 0.35;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  background-color: var(--vscode-progressBar-background, var(--vscode-focusBorder));
+  transition: width 120ms linear;
+}
+
+.progress:hover {
+  opacity: 0.55;
+}
+
+/* Sentences are the seek targets, so they have to look reachable. */
+.sentence {
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.sentence:hover {
+  background-color: var(--vscode-editor-hoverHighlightBackground, var(--vscode-list-hoverBackground));
+}
+
+.sentence:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+
+.sentence.is-current {
+  color: var(--vscode-foreground);
+  background-color: var(--vscode-editor-selectionHighlightBackground, var(--vscode-editor-inactiveSelectionBackground));
+  /* Only set in high-contrast themes, where a background alone reads as nothing. */
+  outline: 1px solid var(--vscode-contrastActiveBorder, transparent);
 }

@@ -1,5 +1,11 @@
 import * as vscode from 'vscode';
-import { PLAYBACK_RATES, type HostToWebview, type WebviewToHost } from '../protocol.js';
+import {
+  PLAYBACK_RATES,
+  type HostToWebview,
+  type PlayerErrorAction,
+  type WebviewToHost,
+} from '../protocol.js';
+import { splitSentences } from './sentences.js';
 
 export interface SegmentPayload {
   index: number;
@@ -70,6 +76,9 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
       file: payload.file,
       kind: payload.kind,
       narration: payload.narration,
+      // Split host-side so the transcript and click-to-seek share one tested
+      // implementation rather than the webview carrying a second parser.
+      sentences: splitSentences(payload.narration),
       ...(audioSrc ? { audioSrc: audioSrc.toString() } : {}),
       autoplay: payload.autoplay,
     });
@@ -81,6 +90,12 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
 
   public reportError(message: string): void {
     this.post({ type: 'error', message });
+  }
+
+  /** Replaces the panel contents with a failure the user can act on. */
+  public showError(title: string, detail: string, actions: PlayerErrorAction[] = []): void {
+    this.lastSegment = undefined;
+    this.post({ type: 'showError', title, detail, actions });
   }
 
   /** The tour ran to its end; the panel stops without clearing itself. */
@@ -151,6 +166,12 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
       </p>
     </div>
 
+    <div class="error-state" id="errorState" hidden>
+      <h1 id="errorTitle"></h1>
+      <p id="errorDetail"></p>
+      <div class="actions" id="errorActions"></div>
+    </div>
+
     <div class="player" id="player" hidden>
       <div class="transport">
         <button id="previous" type="button" aria-label="Previous segment" title="Previous segment">&#8249;</button>
@@ -158,8 +179,20 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
         <button id="next" type="button" aria-label="Next segment" title="Next segment">&#8250;</button>
         <span class="position" id="position"></span>
         <span class="spacer"></span>
+        <span class="time" id="time"></span>
         <label class="visually-hidden" for="rate">Playback speed</label>
         <select id="rate" title="Playback speed">${rateOptions}</select>
+      </div>
+
+      <div
+        class="progress"
+        id="progress"
+        role="progressbar"
+        aria-label="Tour progress"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      >
+        <div class="progress-fill" id="progressFill"></div>
       </div>
 
       <div class="meta">

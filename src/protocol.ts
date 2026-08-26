@@ -12,6 +12,19 @@
 
 export type SegmentKind = 'overview' | 'change' | 'reasoning' | 'caveat';
 
+/** One sentence of narration, with offsets used to map elapsed time onto text. */
+export interface TranscriptSentence {
+  text: string;
+  start: number;
+  end: number;
+}
+
+/** A button offered on an in-panel error. Commands are allowlisted host-side. */
+export interface PlayerErrorAction {
+  label: string;
+  command: string;
+}
+
 export interface LoadSegmentMessage {
   type: 'loadSegment';
   index: number;
@@ -20,6 +33,8 @@ export interface LoadSegmentMessage {
   file: string;
   kind: SegmentKind;
   narration: string;
+  /** Narration split for the transcript; empty when there is nothing to show. */
+  sentences: TranscriptSentence[];
   /** Webview-safe audio URI, absent while that segment is still synthesizing. */
   audioSrc?: string;
   /**
@@ -36,7 +51,10 @@ export type HostToWebview =
   | { type: 'tourFinished' }
   | { type: 'tourStopped' }
   | { type: 'synthesisProgress'; ready: number; total: number }
-  | { type: 'error'; message: string };
+  /** A transient note shown under the transcript. */
+  | { type: 'error'; message: string }
+  /** Replaces the panel with an explained failure and a way out of it. */
+  | { type: 'showError'; title: string; detail: string; actions: PlayerErrorAction[] };
 
 export type WebviewToHost =
   /** Sent once the panel's script is listening, so state can be replayed into it. */
@@ -48,7 +66,11 @@ export type WebviewToHost =
   | { type: 'stop' }
   /** The audio element reached the end of this segment by itself. */
   | { type: 'ended'; index: number }
-  | { type: 'rate'; rate: number };
+  | { type: 'rate'; rate: number }
+  /** Seek within the current segment, as a fraction of its narration. */
+  | { type: 'seek'; fraction: number }
+  /** Runs one of the commands offered by a shown error. */
+  | { type: 'runCommand'; command: string };
 
 /** Playback speeds offered in the panel. */
 export const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 2] as const;

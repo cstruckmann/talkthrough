@@ -57,6 +57,16 @@
         "title": "Stop tour",
         "category": "Talkthrough",
         "icon": "$(close)"
+      },
+      {
+        "command": "talkthrough.showOutput",
+        "title": "Show output",
+        "category": "Talkthrough"
+      },
+      {
+        "command": "talkthrough.openSettings",
+        "title": "Open settings",
+        "category": "Talkthrough"
       }
     ],
     "viewsContainers": {
@@ -107,7 +117,8 @@
             "Call the Anthropic API with a key you store via \"Talkthrough: Set API key\"."
           ],
           "default": "auto",
-          "markdownDescription": "Which backend generates the tour. `auto` prefers a signed-in CLI you already have, then falls back to an API key."
+          "markdownDescription": "Which backend writes the tour. `auto` prefers an agent CLI you have already installed and signed into, then falls back to an API key. Talkthrough never installs a CLI and never handles its login.",
+          "order": 2
         },
         "talkthrough.tts": {
           "type": "string",
@@ -122,22 +133,26 @@
             "OpenAI speech, using a key you store via \"Talkthrough: Set API key\"."
           ],
           "default": "auto",
-          "markdownDescription": "Which engine speaks the narration. `auto` uses the offline system voice where one exists, then falls back to an API voice."
+          "markdownDescription": "Which engine speaks the narration. `auto` uses your operating system voice where one exists, then falls back to an API voice.",
+          "order": 3
         },
         "talkthrough.voice": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Voice used for narration. Run **Talkthrough: Choose narration voice** to pick one from a previewable list. The macOS voices installed by default are *compact* and sound rough; Enhanced and Premium voices are a free download under System Settings, Accessibility, Spoken Content, System Voice, Manage Voices. For the OpenAI engine use a voice name such as `alloy`."
+          "markdownDescription": "Voice used for narration. Run **Talkthrough: Choose narration voice** to pick one from a previewable list. The macOS voices installed by default are *compact* and sound noticeably rough; Enhanced and Premium voices are a free download under System Settings \u2192 Accessibility \u2192 Spoken Content \u2192 System Voice \u2192 Manage Voices. For the OpenAI engine, use a voice name such as `alloy`.",
+          "order": 4
         },
         "talkthrough.baseRef": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Git ref that changes are compared against, for example `main` or `origin/main`. Leave empty to detect your default branch automatically. When your branch has no commits beyond the base, Talkthrough explains your uncommitted working-tree changes instead."
+          "markdownDescription": "Git ref that changes are compared against, for example `main`, `origin/main`, or a commit like `HEAD~3`. Leave empty to detect your default branch automatically. When your branch has no commits beyond the base, Talkthrough explains your uncommitted working-tree changes instead.",
+          "order": 1
         },
         "talkthrough.openDiffView": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Open each segment as a diff against the base ref instead of the plain file."
+          "markdownDescription": "Open each segment as a diff against the base ref rather than the plain file. Useful when you want to see what changed alongside the narration; leave it off to read the file as it stands now.",
+          "order": 5
         }
       }
     },
@@ -158,6 +173,14 @@
         {
           "command": "talkthrough.stopTour",
           "when": "talkthrough.tourActive"
+        },
+        {
+          "command": "talkthrough.showOutput",
+          "when": "false"
+        },
+        {
+          "command": "talkthrough.openSettings",
+          "when": "false"
         }
       ],
       "editor/title": [
@@ -205,6 +228,23 @@
         "view": "talkthrough.segments",
         "contents": "No tour yet.\n\nGenerate a narrated walkthrough of your recent changes.\n[Explain recent changes](command:talkthrough.explainChanges)",
         "when": "!talkthrough.tourActive"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "talkthrough.nextSegment",
+        "key": "alt+right",
+        "when": "talkthrough.tourActive"
+      },
+      {
+        "command": "talkthrough.previousSegment",
+        "key": "alt+left",
+        "when": "talkthrough.tourActive"
+      },
+      {
+        "command": "talkthrough.stopTour",
+        "key": "alt+escape",
+        "when": "talkthrough.tourActive"
       }
     ]
   },
