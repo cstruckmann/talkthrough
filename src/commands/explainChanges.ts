@@ -9,6 +9,7 @@ import { ChangesetError } from '../changeset/types.js';
 import { TtsError } from '../tts/types.js';
 import { loadPromptTemplate } from '../prompt/loadTemplate.js';
 import type { TourScript } from '../tour/schema.js';
+import { shouldUseTwoPass, summarizeChangeset } from '../tour/twoPass.js';
 import type { TourSession } from '../tour/tourSession.js';
 import type { PlayerViewProvider } from '../player/playerViewProvider.js';
 
@@ -83,7 +84,7 @@ async function runTour(
 ): Promise<TourScript | undefined> {
   const config = vscode.workspace.getConfiguration('talkthrough');
 
-  const changeset = await collectChangeset({
+  let changeset = await collectChangeset({
     cwd,
     baseRef: config.get<string>('baseRef', ''),
     maxPatchLines: MAX_PATCH_LINES,
@@ -106,11 +107,29 @@ async function runTour(
     config.get<BackendPreference>('backend', 'auto'),
   );
 
-  progress.report({ message: `Generating the tour with ${backend.label}…` });
   deps.output.appendLine(
     `Talkthrough: ${changeset.files.length} file(s) changed, ` +
       `base ${changeset.baseRef} (${changeset.mode}), backend ${backend.id}.`,
   );
+
+  // A changeset this size is narrated from summaries rather than raw diffs:
+  // handed fifty diffs at once, a model tours the ones it read last.
+  if (shouldUseTwoPass(changeset)) {
+    deps.output.appendLine(
+      `Talkthrough: summarizing ${changeset.files.length} files before writing the tour.`,
+    );
+    const summarizeTemplate = await loadPromptTemplate(deps.extensionUri, 'summarize');
+    changeset = await summarizeChangeset(backend, summarizeTemplate, changeset, {
+      token,
+      onProgress: (message) => progress.report({ message }),
+    });
+
+    if (token.isCancellationRequested) {
+      return undefined;
+    }
+  }
+
+  progress.report({ message: `Generating the tour with ${backend.label}…` });
 
   const tour = await backend.generateTour({
     changeset,

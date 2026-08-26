@@ -34,6 +34,13 @@ export function renderChangeset(changeset: Changeset): string {
         'changed and are not shown; do not create segments for them.',
     );
   }
+  if (changeset.files.some((file) => file.summarized)) {
+    header.push(
+      'This changeset was too large to include in full, so each file below is ' +
+        'described by a summary of its change rather than its diff. The line ' +
+        'numbers in those summaries are already new-file line numbers; use them.',
+    );
+  }
   if (changeset.truncatedFileCount > 0) {
     header.push(
       `${changeset.truncatedFileCount} diff${changeset.truncatedFileCount === 1 ? ' was' : 's were'} ` +
@@ -62,6 +69,12 @@ function renderFile(file: FileChange): string {
 
   if (file.binary) {
     return `${descriptor.join(' ')}\n\nBinary file, contents not shown.\n`;
+  }
+
+  // A summarized file carries prose, not a diff. Labelling it stops the model
+  // reading a summary as though it were the change itself.
+  if (file.summarized) {
+    return `${descriptor.join(' ')}\n\nSummary of this change, not the diff:\n\n${file.patch.trim()}\n`;
   }
 
   const note = file.truncated ? '\nThis diff was truncated; the omission is marked inline.' : '';

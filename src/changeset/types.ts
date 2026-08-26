@@ -16,6 +16,11 @@ export interface FileChange {
   truncated: boolean;
   /** True for files not yet known to git (working-tree mode only). */
   untracked: boolean;
+  /**
+   * True when `patch` holds a summary of the change rather than the diff
+   * itself, which happens on changesets too large to tour from raw diffs.
+   */
+  summarized?: boolean;
 }
 
 /** How the changeset was derived, which affects how the tour is framed. */
