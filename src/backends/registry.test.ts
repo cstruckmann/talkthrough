@@ -6,6 +6,7 @@ const backend = (id: BackendId, available: boolean): TourBackend => ({
   id,
   label: id,
   isAvailable: vi.fn().mockResolvedValue(available),
+  complete: vi.fn(),
   generateTour: vi.fn(),
 });
 

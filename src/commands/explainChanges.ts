@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { AnthropicApiBackend } from '../backends/anthropicApi.js';
 import { ClaudeCliBackend } from '../backends/claudeCli.js';
+import { CodexCliBackend } from '../backends/codexCli.js';
 import { resolveBackend, type BackendPreference } from '../backends/registry.js';
 import { BackendError, type TourBackend } from '../backends/types.js';
 import { collectChangeset } from '../changeset/collector.js';
@@ -96,6 +97,7 @@ async function runTour(
   const template = await loadPromptTemplate(deps.extensionUri);
   const backends: TourBackend[] = [
     new ClaudeCliBackend(template),
+    new CodexCliBackend(template),
     new AnthropicApiBackend(template, deps.secrets),
   ];
 

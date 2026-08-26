@@ -13,12 +13,25 @@ export interface GenerateTourRequest {
   onProgress?: (message: string) => void;
 }
 
+export interface CompleteOptions {
+  token?: vscode.CancellationToken | undefined;
+  onProgress?: ((message: string) => void) | undefined;
+}
+
 export interface TourBackend {
   readonly id: BackendId;
   /** Human-readable name, shown in pickers and error messages. */
   readonly label: string;
   /** Whether this backend can run right now: CLI on PATH, or key present. */
   isAvailable(): Promise<boolean>;
+  /**
+   * One prompt in, one answer out.
+   *
+   * Exposed alongside generateTour because a large changeset is summarized
+   * before it is toured, and that pass wants the same backend without the
+   * tour-shaped validation wrapped around it.
+   */
+  complete(prompt: string, options: CompleteOptions): Promise<string>;
   generateTour(request: GenerateTourRequest): Promise<TourScript>;
 }
 

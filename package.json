@@ -109,11 +109,13 @@
           "enum": [
             "auto",
             "claude-cli",
+            "codex-cli",
             "anthropic-api"
           ],
           "enumDescriptions": [
             "Use whichever backend is ready, preferring a CLI you already installed.",
             "Use your own installed claude CLI. Talkthrough never installs it or handles your login.",
+            "Use your own installed codex CLI. Talkthrough never installs it or handles your login.",
             "Call the Anthropic API with a key you store via \"Talkthrough: Set API key\"."
           ],
           "default": "auto",

@@ -3,7 +3,12 @@ import { assemblePrompt } from '../prompt/assemble.js';
 import { getApiKey } from '../secrets.js';
 import type { TourScript } from '../tour/schema.js';
 import { generateValidatedTour } from './generateValidated.js';
-import { BackendError, type GenerateTourRequest, type TourBackend } from './types.js';
+import {
+  BackendError,
+  type CompleteOptions,
+  type GenerateTourRequest,
+  type TourBackend,
+} from './types.js';
 
 const ENDPOINT = 'https://api.anthropic.com/v1/messages';
 const API_VERSION = '2023-06-01';
@@ -14,6 +19,9 @@ const API_VERSION = '2023-06-01';
  * thinking blocks alongside the text — see extractText.
  */
 const MODEL = 'claude-opus-5';
+
+const MISSING_KEY =
+  'No Anthropic API key is stored. Run "Talkthrough: Set API key" to add one.';
 const MAX_TOKENS = 16_000;
 
 /**
@@ -35,13 +43,18 @@ export class AnthropicApiBackend implements TourBackend {
     return (await getApiKey(this.secrets, 'anthropic')) !== undefined;
   }
 
+  public async complete(prompt: string, options: CompleteOptions): Promise<string> {
+    const apiKey = await getApiKey(this.secrets, 'anthropic');
+    if (apiKey === undefined) {
+      throw new BackendError(MISSING_KEY, 'unavailable');
+    }
+    return this.send(prompt, apiKey, options.token);
+  }
+
   public async generateTour(request: GenerateTourRequest): Promise<TourScript> {
     const apiKey = await getApiKey(this.secrets, 'anthropic');
     if (apiKey === undefined) {
-      throw new BackendError(
-        'No Anthropic API key is stored. Run "Talkthrough: Set API key" to add one.',
-        'unavailable',
-      );
+      throw new BackendError(MISSING_KEY, 'unavailable');
     }
 
     return generateValidatedTour(async (correction) => {
