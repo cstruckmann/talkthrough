@@ -10,12 +10,12 @@ import {
   type TourState,
 } from './tourState.js';
 
-/** Drives palette and status-bar visibility while a tour is loaded. */
+/** Drives title-bar, palette and status-bar visibility while a tour is loaded. */
 const CONTEXT_ACTIVE = 'talkthrough.tourActive';
 
 /**
  * Owns the running tour: state, the editor choreography, and the temporary
- * status-bar controls that stand in until the player panel gains audio.
+ * controls that stand in until the player panel gains audio.
  */
 export class TourSession implements vscode.Disposable {
   private state: TourState = initialTourState;
@@ -23,20 +23,17 @@ export class TourSession implements vscode.Disposable {
   private warnedAboutStaleRanges = false;
 
   private readonly choreographer = new EditorChoreographer();
-  private readonly statusItems: vscode.StatusBarItem[] = [];
+  /**
+   * Position readout only. The stepping controls live in the editor title bar,
+   * which is where the user's attention already is; the status bar carries the
+   * one thing a title-bar item cannot render, which is dynamic text.
+   */
   private readonly position: vscode.StatusBarItem;
 
   constructor(private readonly output: vscode.OutputChannel) {
-    // Right-aligned, descending priority so they read left to right.
-    this.statusItems.push(
-      this.button('$(chevron-left)', 'talkthrough.previousSegment', 'Previous segment', 104),
-    );
-    this.position = this.button('', 'talkthrough.goToSegment', 'Jump to a segment', 103);
-    this.statusItems.push(this.position);
-    this.statusItems.push(
-      this.button('$(chevron-right)', 'talkthrough.nextSegment', 'Next segment', 102),
-    );
-    this.statusItems.push(this.button('$(close)', 'talkthrough.stopTour', 'Stop the tour', 101));
+    this.position = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    this.position.command = 'talkthrough.goToSegment';
+    this.position.tooltip = 'Jump to a segment';
   }
 
   public async start(tour: TourScript, repoRoot: string): Promise<void> {
@@ -90,7 +87,7 @@ export class TourSession implements vscode.Disposable {
 
   public dispose(): void {
     this.choreographer.dispose();
-    this.statusItems.forEach((item) => item.dispose());
+    this.position.dispose();
     void this.setActiveContext(false);
   }
 
@@ -140,38 +137,25 @@ export class TourSession implements vscode.Disposable {
 
   private render(): void {
     if (!isActive(this.state)) {
-      this.statusItems.forEach((item) => item.hide());
+      this.position.hide();
       return;
     }
 
     const segment = currentSegment(this.state);
     const done = this.state.status === 'done';
 
-    this.position.text = `$(broadcast) ${this.state.index + 1}/${this.segmentCount}${
-      done ? ' · done' : ''
-    }`;
+    this.position.text =
+      `$(broadcast) ${this.state.index + 1}/${this.segmentCount}` +
+      (done ? ' · done' : segment ? ` · ${segment.kind}` : '');
     this.position.tooltip = segment
       ? new vscode.MarkdownString(`**${segment.kind}** — ${segment.file}\n\n${segment.narration}`)
       : undefined;
 
-    this.statusItems.forEach((item) => item.show());
+    this.position.show();
   }
 
   private get segmentCount(): number {
     return isActive(this.state) ? this.state.tour.segments.length : 0;
-  }
-
-  private button(
-    text: string,
-    command: string,
-    tooltip: string,
-    priority: number,
-  ): vscode.StatusBarItem {
-    const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, priority);
-    item.text = text;
-    item.command = command;
-    item.tooltip = tooltip;
-    return item;
   }
 
   private async setActiveContext(active: boolean): Promise<void> {

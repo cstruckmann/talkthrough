@@ -32,22 +32,26 @@
       {
         "command": "talkthrough.nextSegment",
         "title": "Next segment",
-        "category": "Talkthrough"
+        "category": "Talkthrough",
+        "icon": "$(chevron-right)"
       },
       {
         "command": "talkthrough.previousSegment",
         "title": "Previous segment",
-        "category": "Talkthrough"
+        "category": "Talkthrough",
+        "icon": "$(chevron-left)"
       },
       {
         "command": "talkthrough.goToSegment",
         "title": "Go to segment\u2026",
-        "category": "Talkthrough"
+        "category": "Talkthrough",
+        "icon": "$(list-ordered)"
       },
       {
         "command": "talkthrough.stopTour",
         "title": "Stop tour",
-        "category": "Talkthrough"
+        "category": "Talkthrough",
+        "icon": "$(close)"
       }
     ],
     "viewsContainers": {
@@ -115,6 +119,28 @@
         {
           "command": "talkthrough.stopTour",
           "when": "talkthrough.tourActive"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "talkthrough.previousSegment",
+          "when": "talkthrough.tourActive",
+          "group": "navigation@1"
+        },
+        {
+          "command": "talkthrough.goToSegment",
+          "when": "talkthrough.tourActive",
+          "group": "navigation@2"
+        },
+        {
+          "command": "talkthrough.nextSegment",
+          "when": "talkthrough.tourActive",
+          "group": "navigation@3"
+        },
+        {
+          "command": "talkthrough.stopTour",
+          "when": "talkthrough.tourActive",
+          "group": "navigation@4"
         }
       ]
     }
