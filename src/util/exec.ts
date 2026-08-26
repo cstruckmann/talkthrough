@@ -38,6 +38,23 @@ export class ExecCancelledError extends Error {
   }
 }
 
+/**
+ * Every live child, so shutdown can end them.
+ *
+ * A CLI backend can be mid-generation when the window closes, and an orphaned
+ * agent process would keep running — and keep billing — with nothing left to
+ * receive its answer.
+ */
+const activeChildren = new Set<ReturnType<typeof execFile>>();
+
+/** Kills every child process this extension started. Called on deactivate. */
+export function killAllChildren(): void {
+  for (const child of activeChildren) {
+    child.kill();
+  }
+  activeChildren.clear();
+}
+
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_BUFFER = 64 * 1024 * 1024;
 
@@ -94,6 +111,9 @@ export function run(command: string, args: string[], options: ExecOptions): Prom
         );
       },
     );
+
+    activeChildren.add(child);
+    child.on('close', () => activeChildren.delete(child));
 
     if (options.stdin !== undefined) {
       child.stdin?.on('error', () => {

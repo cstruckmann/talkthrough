@@ -11,6 +11,7 @@ import { loadPromptTemplate } from '../prompt/loadTemplate.js';
 import type { TourScript } from '../tour/schema.js';
 import { shouldUseTwoPass, summarizeChangeset } from '../tour/twoPass.js';
 import { loadAgentTranscript } from '../transcript/findTranscript.js';
+import { linkCancellation, type RunCoordinator } from '../util/runCoordinator.js';
 import type { TourSession } from '../tour/tourSession.js';
 import type { PlayerViewProvider } from '../player/playerViewProvider.js';
 
@@ -26,6 +27,7 @@ export interface ExplainChangesDeps {
   output: vscode.OutputChannel;
   session: TourSession;
   player: PlayerViewProvider;
+  run: RunCoordinator;
   /** Chooses a voice and readies synthesis before the tour starts playing. */
   prepareNarration: (tour: TourScript) => Promise<void>;
 }
@@ -47,8 +49,16 @@ export async function explainChanges(deps: ExplainChangesDeps): Promise<void> {
         cancellable: true,
       },
       async (progress, token) => {
-        progress.report({ message: 'Reading your changes…' });
-        return runTour(cwd, deps, progress, token);
+        // Starting a tour cancels any earlier one still generating; the
+        // notification's own cancel button folds into the same token.
+        const source = deps.run.begin();
+        const link = linkCancellation(token, source);
+        try {
+          progress.report({ message: 'Reading your changes…' });
+          return await runTour(cwd, deps, progress, source.token);
+        } finally {
+          link.dispose();
+        }
       },
     );
 

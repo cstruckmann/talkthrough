@@ -11,6 +11,8 @@ import { resolveEngine, type TtsPreference } from './tts/registry.js';
 import { SystemTtsEngine } from './tts/systemEngine.js';
 import { TourSynthesizer } from './tts/synthesizer.js';
 import type { TtsEngine } from './tts/types.js';
+import { killAllChildren } from './util/exec.js';
+import { RunCoordinator } from './util/runCoordinator.js';
 
 /** Commands the player panel is permitted to invoke through an error action. */
 const PANEL_COMMANDS = new Set([
@@ -24,6 +26,7 @@ const PANEL_COMMANDS = new Set([
 export function activate(context: vscode.ExtensionContext): void {
   const output = vscode.window.createOutputChannel('Talkthrough');
   const session = new TourSession(output);
+  const run = new RunCoordinator();
 
   const engines: TtsEngine[] = [new SystemTtsEngine(), new OpenAiTtsEngine(context.secrets)];
   const synthesizer = new TourSynthesizer(
@@ -38,6 +41,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     output,
     session,
+    run,
     synthesizer,
     player,
     registerSegmentsView(session),
@@ -82,6 +86,7 @@ export function activate(context: vscode.ExtensionContext): void {
         output,
         session,
         player,
+        run,
         prepareNarration: async (tour) => {
           const engine = await resolveEngine(
             engines,
@@ -150,7 +155,8 @@ async function goToSegment(session: TourSession): Promise<void> {
 }
 
 export function deactivate(): void {
-  // Decorations, status-bar items, the player and pending synthesis are all
-  // disposed through the extension's subscriptions; child processes are bound
-  // to cancellation tokens that are cancelled as part of that teardown.
+  // Disposables handle decorations, the player and pending synthesis. Child
+  // processes need ending explicitly: an agent CLI mid-generation would
+  // otherwise outlive the window that asked for the tour.
+  killAllChildren();
 }
