@@ -5,6 +5,7 @@ import { resolveBackend, type BackendPreference } from '../backends/registry.js'
 import { BackendError, type TourBackend } from '../backends/types.js';
 import { collectChangeset } from '../changeset/collector.js';
 import { ChangesetError } from '../changeset/types.js';
+import { TtsError } from '../tts/types.js';
 import { loadPromptTemplate } from '../prompt/loadTemplate.js';
 import type { TourScript } from '../tour/schema.js';
 import type { TourSession } from '../tour/tourSession.js';
@@ -20,6 +21,8 @@ export interface ExplainChangesDeps {
   secrets: vscode.SecretStorage;
   output: vscode.OutputChannel;
   session: TourSession;
+  /** Chooses a voice and readies synthesis before the tour starts playing. */
+  prepareNarration: (tour: TourScript) => Promise<void>;
 }
 
 export async function explainChanges(deps: ExplainChangesDeps): Promise<void> {
@@ -49,13 +52,14 @@ export async function explainChanges(deps: ExplainChangesDeps): Promise<void> {
     }
 
     writeToOutput(deps.output, tour);
+    await deps.prepareNarration(tour);
     await deps.session.start(tour, cwd);
 
     const count = tour.segments.length;
     void vscode.window
       .showInformationMessage(
         `Talkthrough: "${tour.title}" — ${count} segment${count === 1 ? '' : 's'}. ` +
-          'Step through it from the status bar.',
+          'Press play in the Talkthrough panel.',
         'Show script',
       )
       .then((choice) => {
@@ -134,6 +138,14 @@ function reportError(output: vscode.OutputChannel, error: unknown): void {
   if (error instanceof ChangesetError) {
     if (error.kind === 'empty-diff') {
       void vscode.window.showInformationMessage(`Talkthrough: ${error.message}`);
+      return;
+    }
+    void vscode.window.showErrorMessage(`Talkthrough: ${error.message}`);
+    return;
+  }
+
+  if (error instanceof TtsError) {
+    if (error.kind === 'cancelled') {
       return;
     }
     void vscode.window.showErrorMessage(`Talkthrough: ${error.message}`);

@@ -1,4 +1,7 @@
 import * as vscode from 'vscode';
+import type { PlayerViewProvider } from '../player/playerViewProvider.js';
+import type { TourSynthesizer } from '../tts/synthesizer.js';
+import { TtsError } from '../tts/types.js';
 import { EditorChoreographer } from './choreographer.js';
 import type { TourScript, TourSegment } from './schema.js';
 import {
@@ -34,10 +37,19 @@ export class TourSession implements vscode.Disposable {
   /** Fires whenever the tour starts, advances or stops. */
   public readonly onDidChangeState = this.stateChanged.event;
 
+  /** Set once the player panel and synthesizer exist; absent in Phase 2 tests. */
+  private player: PlayerViewProvider | undefined;
+  private synthesizer: TourSynthesizer | undefined;
+
   constructor(private readonly output: vscode.OutputChannel) {
     this.position = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     this.position.command = 'talkthrough.goToSegment';
     this.position.tooltip = 'Jump to a segment';
+  }
+
+  public attachPlayer(player: PlayerViewProvider, synthesizer: TourSynthesizer): void {
+    this.player = player;
+    this.synthesizer = synthesizer;
   }
 
   public async start(tour: TourScript, repoRoot: string): Promise<void> {
@@ -49,6 +61,10 @@ export class TourSession implements vscode.Disposable {
     this.output.appendLine(tour.summary);
 
     await this.dispatch({ type: 'start', tour });
+
+    // Everything after the first segment is filled in behind the listener, so
+    // playback can begin while the rest is still being spoken into files.
+    void this.synthesizer?.prefetchFrom(1);
   }
 
   public async dispatch(action: TourAction): Promise<void> {
@@ -61,6 +77,7 @@ export class TourSession implements vscode.Disposable {
 
     if (!isActive(this.state)) {
       this.choreographer.clear();
+      this.player?.tourStopped();
       await this.setActiveContext(false);
       this.render();
       this.stateChanged.fire();
@@ -71,6 +88,7 @@ export class TourSession implements vscode.Disposable {
     this.render();
     this.stateChanged.fire();
     await this.revealCurrent();
+    await this.loadAudio(action.type === 'start');
   }
 
   public get isRunning(): boolean {
@@ -147,6 +165,51 @@ export class TourSession implements vscode.Disposable {
         'Talkthrough: some files have changed since this tour was generated, so the ' +
           'highlighted ranges were adjusted to fit. Re-run the command for an accurate tour.',
       );
+    }
+  }
+
+  /**
+   * Pushes the current segment to the player, with its audio if that already
+   * exists and as soon as it does otherwise.
+   *
+   * `isFirst` suppresses autoplay: browser policy refuses playback that has not
+   * followed a user gesture, so the opening segment always waits for the play
+   * button rather than silently failing to start.
+   */
+  private async loadAudio(isFirst: boolean): Promise<void> {
+    const segment = currentSegment(this.state);
+    const player = this.player;
+    if (!segment || !player) {
+      return;
+    }
+
+    const index = this.state.index;
+    const payload = {
+      index,
+      total: this.segmentCount,
+      title: this.title ?? 'Talkthrough',
+      file: segment.file,
+      kind: segment.kind,
+      narration: segment.narration,
+      autoplay: !isFirst,
+      done: this.state.status === 'done',
+    };
+
+    // Show the segment straight away; the audio follows when it is ready, so
+    // the panel never sits blank while a voice is being synthesized.
+    player.loadSegment({ ...payload, audio: undefined });
+
+    try {
+      const audio = await this.synthesizer?.audioFor(index);
+      // The user may have moved on while this was being made.
+      if (audio && this.state.index === index && isActive(this.state)) {
+        player.loadSegment({ ...payload, audio });
+      }
+    } catch (error) {
+      const message =
+        error instanceof TtsError ? error.message : `Narration failed: ${String(error)}`;
+      player.reportError(message);
+      this.output.appendLine(`Talkthrough: ${message}`);
     }
   }
 
