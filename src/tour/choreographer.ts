@@ -57,19 +57,24 @@ export class EditorChoreographer implements vscode.Disposable {
 
     if (options.diff) {
       await this.openDiff(uri, segment, options.diff.baseRef);
-      // The diff's right-hand side is an editor over this same document. Find
-      // it and decorate that, rather than opening the plain file on top of the
-      // diff that was just requested.
-      editor = vscode.window.visibleTextEditors.find(
-        (candidate) => candidate.document.uri.toString() === uri.toString(),
-      );
+      // The diff's right-hand side is an editor over this same document, and it
+      // is what gets decorated — opening the plain file here would cover the
+      // diff that was just requested. It is not registered as visible the
+      // instant the command resolves, hence the wait.
+      editor = await this.waitForEditor(uri);
+    } else {
+      editor = await vscode.window.showTextDocument(document, {
+        preserveFocus: true,
+        preview: true,
+        viewColumn: vscode.ViewColumn.Active,
+      });
     }
 
-    editor ??= await vscode.window.showTextDocument(document, {
-      preserveFocus: true,
-      preview: true,
-      viewColumn: vscode.ViewColumn.Active,
-    });
+    if (!editor) {
+      // The diff opened but its editor never surfaced. The user can still read
+      // it; only the highlight is missing, so this is not worth an error.
+      return { shown: true, clamped };
+    }
 
     const range = new vscode.Range(
       new vscode.Position(startLine - 1, 0),
@@ -82,6 +87,28 @@ export class EditorChoreographer implements vscode.Disposable {
     editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
 
     return { shown: true, clamped };
+  }
+
+  /**
+   * Waits briefly for an editor over `uri` to become visible.
+   *
+   * `vscode.diff` resolves before its editors are registered, so a single
+   * synchronous lookup misses it on the first segment of a tour.
+   */
+  private async waitForEditor(uri: vscode.Uri): Promise<vscode.TextEditor | undefined> {
+    const target = uri.toString();
+
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const editor = vscode.window.visibleTextEditors.find(
+        (candidate) => candidate.document.uri.toString() === target,
+      );
+      if (editor) {
+        return editor;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+
+    return undefined;
   }
 
   /** Lifts the highlight from every editor currently carrying one. */
@@ -112,7 +139,7 @@ export class EditorChoreographer implements vscode.Disposable {
       base,
       uri,
       `${segment.file} (${baseRef} ↔ working tree)`,
-      { preserveFocus: true, preview: true },
+      { preview: true },
     );
   }
 }
