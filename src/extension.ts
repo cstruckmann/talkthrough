@@ -3,6 +3,7 @@ import { explainChanges } from './commands/explainChanges.js';
 import { promptForApiKey } from './commands/setApiKey.js';
 import { PlayerViewProvider } from './player/playerViewProvider.js';
 import { BaseContentProvider } from './tour/baseContentProvider.js';
+import { registerSegmentsView } from './tour/segmentsView.js';
 import { TourSession } from './tour/tourSession.js';
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -12,6 +13,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     output,
     session,
+    registerSegmentsView(session),
 
     vscode.workspace.registerTextDocumentContentProvider(
       BaseContentProvider.scheme,
@@ -41,6 +43,9 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand('talkthrough.goToSegment', () => {
       void goToSegment(session);
+    }),
+    vscode.commands.registerCommand('talkthrough.goToSegmentIndex', (index: number) => {
+      void session.dispatch({ type: 'goto', index });
     }),
 
     vscode.window.registerWebviewViewProvider(

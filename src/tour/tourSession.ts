@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { EditorChoreographer } from './choreographer.js';
-import type { TourScript } from './schema.js';
+import type { TourScript, TourSegment } from './schema.js';
 import {
   currentSegment,
   initialTourState,
@@ -29,6 +29,10 @@ export class TourSession implements vscode.Disposable {
    * one thing a title-bar item cannot render, which is dynamic text.
    */
   private readonly position: vscode.StatusBarItem;
+
+  private readonly stateChanged = new vscode.EventEmitter<void>();
+  /** Fires whenever the tour starts, advances or stops. */
+  public readonly onDidChangeState = this.stateChanged.event;
 
   constructor(private readonly output: vscode.OutputChannel) {
     this.position = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -59,16 +63,30 @@ export class TourSession implements vscode.Disposable {
       this.choreographer.clear();
       await this.setActiveContext(false);
       this.render();
+      this.stateChanged.fire();
       return;
     }
 
     await this.setActiveContext(true);
     this.render();
+    this.stateChanged.fire();
     await this.revealCurrent();
   }
 
   public get isRunning(): boolean {
     return isActive(this.state);
+  }
+
+  public get segments(): readonly TourSegment[] {
+    return isActive(this.state) ? this.state.tour.segments : [];
+  }
+
+  public get currentIndex(): number | undefined {
+    return isActive(this.state) ? this.state.index : undefined;
+  }
+
+  public get title(): string | undefined {
+    return isActive(this.state) ? this.state.tour.title : undefined;
   }
 
   /** Segment labels for the jump-to quick pick. */
@@ -88,6 +106,7 @@ export class TourSession implements vscode.Disposable {
   public dispose(): void {
     this.choreographer.dispose();
     this.position.dispose();
+    this.stateChanged.dispose();
     void this.setActiveContext(false);
   }
 

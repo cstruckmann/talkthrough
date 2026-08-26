@@ -39,6 +39,7 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 - [x] Tour state machine in the host: idle → playing(segmentIndex) → paused → done; commands next/prev/stop.
 - [x] Temporary controls (before audio exists): status-bar buttons or quick-pick to step through segments manually.
 - [x] Optional `talkthrough.openDiffView`: show `vscode.diff` for the segment's file instead of the plain document.
+- [x] *(added during Phase 2, not in the original plan)* Activity-bar container with a `talkthrough.segments` tree view: the tour as a navigable list with kind icons, selection following the current segment, and prev/next/stop in the view title. Stepping controls also contributed to the editor title bar.
 
 ⛔ **REVIEW CHECKPOINT 2** — Human steps through a tour silently: correct files open, correct lines highlighted, stepping feels smooth, no decoration leftovers. Approve to continue.
 
@@ -59,7 +60,7 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 
 ## Phase 4 — Player UX polish
 
-- [ ] Panel UI: segment list with kind badges (overview/change/reasoning/caveat), current segment highlighted, click to jump.
+- [ ] ~~Panel UI: segment list with kind badges~~ — **moved to the sidebar tree view in Phase 2.** The panel keeps the transport and transcript only; revisit only if the two surfaces feel redundant in use.
 - [ ] Live transcript view; current sentence emphasized; sentences clickable to seek within a segment (approximate by character-proportional offset — word timestamps are out of scope).
 - [ ] Progress bar across the whole tour; elapsed/total time.
 - [ ] Keyboard shortcuts (space play/pause, arrows prev/next) while panel focused.

@@ -55,16 +55,30 @@
       }
     ],
     "viewsContainers": {
-      "panel": [
+      "activitybar": [
         {
           "id": "talkthrough",
           "title": "Talkthrough",
-          "icon": "$(broadcast)"
+          "icon": "media/talkthrough.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "talkthroughPlayer",
+          "title": "Talkthrough",
+          "icon": "media/talkthrough.svg"
         }
       ]
     },
     "views": {
       "talkthrough": [
+        {
+          "id": "talkthrough.segments",
+          "name": "Tour",
+          "type": "tree"
+        }
+      ],
+      "talkthroughPlayer": [
         {
           "id": "talkthrough.player",
           "name": "Player",
@@ -142,8 +156,32 @@
           "when": "talkthrough.tourActive",
           "group": "navigation@4"
         }
+      ],
+      "view/title": [
+        {
+          "command": "talkthrough.previousSegment",
+          "when": "view == talkthrough.segments && talkthrough.tourActive",
+          "group": "navigation@1"
+        },
+        {
+          "command": "talkthrough.nextSegment",
+          "when": "view == talkthrough.segments && talkthrough.tourActive",
+          "group": "navigation@2"
+        },
+        {
+          "command": "talkthrough.stopTour",
+          "when": "view == talkthrough.segments && talkthrough.tourActive",
+          "group": "navigation@3"
+        }
       ]
-    }
+    },
+    "viewsWelcome": [
+      {
+        "view": "talkthrough.segments",
+        "contents": "No tour yet.\n\nGenerate a narrated walkthrough of your recent changes.\n[Explain recent changes](command:talkthrough.explainChanges)",
+        "when": "!talkthrough.tourActive"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run build",
