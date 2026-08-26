@@ -7,7 +7,17 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # The suite drives the real git binary and real child processes, so it is
+    # worth running on more than one platform. Windows is not covered here:
+    # the exec tests use POSIX tools, and the extension's Windows story is
+    # untested until someone runs it there.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@v4
 

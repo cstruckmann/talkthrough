@@ -78,7 +78,7 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 - [x] Large-changeset strategy: over N changed files → two-pass generation (per-file summaries → tour over summaries). Verify on a 50-file diff.
 - [x] Optional Claude Code transcript enrichment (`talkthrough.useAgentTranscript`): locate latest session JSONL for the workspace, extract assistant reasoning, feed to generator. Degrade gracefully if absent.
 - [x] Concurrency & cancellation: cancel a running generation/synthesis when a new tour starts or VS Code closes; no orphaned child processes.
-- [ ] Cross-platform check on Linux (extension host paths, child_process, no `say` — verify error path) — use the Ubuntu server for this.
+- [ ] Cross-platform check on Linux (extension host paths, child_process, no `say` — verify error path) — use the Ubuntu server for this. *(CI now runs the full suite on ubuntu-latest, covering the collector against real git, child-process handling and the no-`say` error path. The Extension Development Host run itself still needs a Linux machine.)*
 - [x] Unit test sweep for: schema, diff truncation, prompt assembly, cache keys, message protocol reducers.
 
 ⛔ **REVIEW CHECKPOINT 5** — Human tests: codex backend parity, a huge diff, transcript-enriched tour vs. plain-diff tour (side by side — is the reasoning narration noticeably better?), and a Linux run. Approve to continue.
