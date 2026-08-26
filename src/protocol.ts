@@ -28,12 +28,12 @@ export interface LoadSegmentMessage {
    * gesture, so the panel waits for the play button.
    */
   autoplay: boolean;
-  /** True when the tour has run past its last segment. */
-  done: boolean;
 }
 
 export type HostToWebview =
   | LoadSegmentMessage
+  /** The tour reached its end. Playback stops; the loaded segment stays put. */
+  | { type: 'tourFinished' }
   | { type: 'tourStopped' }
   | { type: 'synthesisProgress'; ready: number; total: number }
   | { type: 'error'; message: string };

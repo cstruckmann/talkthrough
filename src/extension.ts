@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { explainChanges } from './commands/explainChanges.js';
+import { selectVoice } from './commands/selectVoice.js';
 import { promptForApiKey } from './commands/setApiKey.js';
 import { PlayerViewProvider } from './player/playerViewProvider.js';
 import { BaseContentProvider } from './tour/baseContentProvider.js';
@@ -78,6 +79,9 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand('talkthrough.setApiKey', () => {
       void promptForApiKey(context.secrets);
+    }),
+    vscode.commands.registerCommand('talkthrough.selectVoice', () => {
+      void selectVoice();
     }),
 
     vscode.commands.registerCommand('talkthrough.nextSegment', () => {

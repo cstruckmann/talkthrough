@@ -11,7 +11,6 @@ export interface SegmentPayload {
   /** Audio on disk, absent while the segment is still being synthesized. */
   audio?: vscode.Uri | undefined;
   autoplay: boolean;
-  done: boolean;
 }
 
 /**
@@ -73,7 +72,6 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
       narration: payload.narration,
       ...(audioSrc ? { audioSrc: audioSrc.toString() } : {}),
       autoplay: payload.autoplay,
-      done: payload.done,
     });
   }
 
@@ -83,6 +81,11 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
 
   public reportError(message: string): void {
     this.post({ type: 'error', message });
+  }
+
+  /** The tour ran to its end; the panel stops without clearing itself. */
+  public tourFinished(): void {
+    this.post({ type: 'tourFinished' });
   }
 
   public tourStopped(): void {

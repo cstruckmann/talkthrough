@@ -40,9 +40,13 @@ export function tourReducer(state: TourState, action: TourAction): TourState {
         return state;
       }
       const last = lastIndex(state);
-      return state.index >= last
-        ? { ...state, status: 'done', index: last }
-        : { ...state, status: 'playing', index: state.index + 1 };
+      if (state.index < last) {
+        return { ...state, status: 'playing', index: state.index + 1 };
+      }
+      // Identity, not a fresh equal object: callers treat an unchanged state as
+      // "nothing to do", and a new object here would have them replay the last
+      // segment, which ends, advances, and replays it again forever.
+      return state.status === 'done' ? state : { ...state, status: 'done', index: last };
     }
 
     case 'previous':

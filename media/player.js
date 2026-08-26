@@ -121,9 +121,6 @@
           status.textContent = 'Preparing narration…';
         }
 
-        if (message.done) {
-          status.textContent = 'End of tour.';
-        }
         break;
       }
 
@@ -133,6 +130,13 @@
         } else if ((status.textContent || '').startsWith('Preparing')) {
           status.textContent = '';
         }
+        break;
+      }
+
+      case 'tourFinished': {
+        audio.pause();
+        setPlayingUi(false);
+        status.textContent = 'End of tour.';
         break;
       }
 

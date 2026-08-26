@@ -162,3 +162,26 @@ describe('tourReducer', () => {
     expect(tourReducer(initialTourState, { type: 'start', tour: empty })).toBe(initialTourState);
   });
 });
+
+describe('reaching the end of a tour', () => {
+  it('returns the identical state on a repeated next, so callers stop', () => {
+    let state = start(2);
+    state = tourReducer(state, { type: 'next' });
+    const done = tourReducer(state, { type: 'next' });
+
+    expect(done.status).toBe('done');
+    // Identity matters: a fresh equal object would have the session replay the
+    // last segment, which ends, advances, and replays it forever.
+    expect(tourReducer(done, { type: 'next' })).toBe(done);
+  });
+
+  it('does not advance the index past the last segment', () => {
+    let state = start(3);
+    for (let i = 0; i < 10; i++) {
+      state = tourReducer(state, { type: 'next' });
+    }
+
+    expect(state.index).toBe(2);
+    expect(state.status).toBe('done');
+  });
+});

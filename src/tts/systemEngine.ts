@@ -4,8 +4,15 @@ import { join } from 'node:path';
 import { ExecCancelledError, ExecError, run } from '../util/exec.js';
 import { TtsError, type SynthesisRequest, type TtsEngine } from './types.js';
 
-/** Linear PCM at 22 kHz: a WAV every browser audio element will play. */
-const DATA_FORMAT = 'LEI16@22050';
+/**
+ * Linear PCM at 48 kHz: a WAV every browser audio element will play, at the
+ * rate the voices are actually rendered. Asking for less makes `say` resample,
+ * and its resampler adds audible grit to sibilants.
+ *
+ * `say` cannot write a WAV without being told a data format, so this is
+ * required rather than merely preferred.
+ */
+const DATA_FORMAT = 'LEI16@48000';
 
 const TIMEOUT_MS = 120_000;
 

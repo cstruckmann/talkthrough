@@ -75,6 +75,8 @@ export class TourSession implements vscode.Disposable {
       return;
     }
 
+    const segmentChanged = this.state.index !== previous.index || action.type === 'start';
+
     if (!isActive(this.state)) {
       this.choreographer.clear();
       this.player?.tourStopped();
@@ -87,6 +89,16 @@ export class TourSession implements vscode.Disposable {
     await this.setActiveContext(true);
     this.render();
     this.stateChanged.fire();
+
+    // Reaching the end is a status change, not a new segment. Reloading here
+    // would replay the last segment, which would end and advance again.
+    if (!segmentChanged) {
+      if (this.state.status === 'done') {
+        this.player?.tourFinished();
+      }
+      return;
+    }
+
     await this.revealCurrent();
     await this.loadAudio(action.type === 'start');
   }
@@ -192,7 +204,6 @@ export class TourSession implements vscode.Disposable {
       kind: segment.kind,
       narration: segment.narration,
       autoplay: !isFirst,
-      done: this.state.status === 'done',
     };
 
     // Show the segment straight away; the audio follows when it is ready, so
