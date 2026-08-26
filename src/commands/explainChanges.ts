@@ -10,6 +10,7 @@ import { TtsError } from '../tts/types.js';
 import { loadPromptTemplate } from '../prompt/loadTemplate.js';
 import type { TourScript } from '../tour/schema.js';
 import { shouldUseTwoPass, summarizeChangeset } from '../tour/twoPass.js';
+import { loadAgentTranscript } from '../transcript/findTranscript.js';
 import type { TourSession } from '../tour/tourSession.js';
 import type { PlayerViewProvider } from '../player/playerViewProvider.js';
 
@@ -129,10 +130,23 @@ async function runTour(
     }
   }
 
+  // Enrichment only: a missing or unreadable session must never be the reason
+  // a tour fails, so this resolves to undefined rather than throwing.
+  const transcript = config.get<boolean>('useAgentTranscript', true)
+    ? await loadAgentTranscript(cwd)
+    : undefined;
+
+  if (transcript) {
+    deps.output.appendLine(
+      `Talkthrough: enriching the tour with ${transcript.length} characters of agent transcript.`,
+    );
+  }
+
   progress.report({ message: `Generating the tour with ${backend.label}…` });
 
   const tour = await backend.generateTour({
     changeset,
+    ...(transcript === undefined ? {} : { transcript }),
     token,
     onProgress: (message) => progress.report({ message }),
   });

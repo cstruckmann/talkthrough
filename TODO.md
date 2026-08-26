@@ -76,7 +76,7 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 
 - [x] Backend: `codex-cli` — detect `codex` on PATH, invoke `codex exec` with JSON-only prompt (final message on stdout), same validate/retry path.
 - [x] Large-changeset strategy: over N changed files → two-pass generation (per-file summaries → tour over summaries). Verify on a 50-file diff.
-- [ ] Optional Claude Code transcript enrichment (`talkthrough.useAgentTranscript`): locate latest session JSONL for the workspace, extract assistant reasoning, feed to generator. Degrade gracefully if absent.
+- [x] Optional Claude Code transcript enrichment (`talkthrough.useAgentTranscript`): locate latest session JSONL for the workspace, extract assistant reasoning, feed to generator. Degrade gracefully if absent.
 - [ ] Concurrency & cancellation: cancel a running generation/synthesis when a new tour starts or VS Code closes; no orphaned child processes.
 - [ ] Cross-platform check on Linux (extension host paths, child_process, no `say` — verify error path) — use the Ubuntu server for this.
 - [ ] Unit test sweep for: schema, diff truncation, prompt assembly, cache keys, message protocol reducers.

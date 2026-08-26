@@ -155,6 +155,12 @@
           "default": false,
           "markdownDescription": "Open each segment as a diff against the base ref rather than the plain file. Useful when you want to see what changed alongside the narration; leave it off to read the file as it stands now.",
           "order": 5
+        },
+        "talkthrough.useAgentTranscript": {
+          "type": "boolean",
+          "default": true,
+          "order": 6,
+          "markdownDescription": "Read your most recent agent session for this workspace and let the tour explain the *reasoning* behind the changes, not just the diff. Only the conversation prose is used \u2014 never tool calls or file contents \u2014 and it is sent to the same backend that writes the tour. Turn this off to send the diff alone. If no session is found, tours are generated from the diff as usual."
         }
       }
     },
