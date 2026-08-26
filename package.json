@@ -30,6 +30,11 @@
         "category": "Talkthrough"
       },
       {
+        "command": "talkthrough.selectVoice",
+        "title": "Choose narration voice",
+        "category": "Talkthrough"
+      },
+      {
         "command": "talkthrough.nextSegment",
         "title": "Next segment",
         "category": "Talkthrough",
@@ -103,6 +108,26 @@
           ],
           "default": "auto",
           "markdownDescription": "Which backend generates the tour. `auto` prefers a signed-in CLI you already have, then falls back to an API key."
+        },
+        "talkthrough.tts": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "system",
+            "openai"
+          ],
+          "enumDescriptions": [
+            "Use whichever voice is ready, preferring the offline system voice.",
+            "Your operating system's built-in voice. Offline, no account. macOS only for now.",
+            "OpenAI speech, using a key you store via \"Talkthrough: Set API key\"."
+          ],
+          "default": "auto",
+          "markdownDescription": "Which engine speaks the narration. `auto` uses the offline system voice where one exists, then falls back to an API voice."
+        },
+        "talkthrough.voice": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Voice used for narration. Run **Talkthrough: Choose narration voice** to pick one from a previewable list. The macOS voices installed by default are *compact* and sound rough; Enhanced and Premium voices are a free download under System Settings, Accessibility, Spoken Content, System Voice, Manage Voices. For the OpenAI engine use a voice name such as `alloy`."
         },
         "talkthrough.baseRef": {
           "type": "string",
