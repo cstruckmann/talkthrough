@@ -47,9 +47,9 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 
 ## Phase 3 — TTS & audio playback
 
-- [ ] `TTSEngine` interface `synthesize(text, voice) => audioFile`; cache keyed by hash(text+voice+engine) in `globalStorageUri`.
-- [ ] Engine: `system` — macOS `say` → WAV (document Windows/Linux gap for now; fail with actionable message pointing to API TTS).
-- [ ] Engine: `openai` TTS via user key in SecretStorage.
+- [x] `TTSEngine` interface `synthesize(text, voice) => audioFile`; cache keyed by hash(text+voice+engine) in `globalStorageUri`.
+- [x] Engine: `system` — macOS `say` → WAV (document Windows/Linux gap for now; fail with actionable message pointing to API TTS).
+- [x] Engine: `openai` TTS via user key in SecretStorage.
 - [ ] Synthesis pipeline: on tour start, synthesize segment 1 immediately, remaining segments in background; progress notification.
 - [ ] Webview player v1: `<audio>` element fed via `asWebviewUri`, play/pause/next/prev, playback speed. Host↔webview `postMessage` protocol: host pushes `loadSegment`, webview reports `ended`/`seeked`/user actions.
 - [ ] Sync: webview `ended` → host advances segment → choreographer moves editor → host pushes next audio. First playback must be user-initiated (autoplay policy).
