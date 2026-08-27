@@ -68,7 +68,7 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 - [x] Empty/error states in-panel: no git repo, no diff, backend missing (with "how to fix" links), generation failed.
 - [x] Theming pass: audit all colors/fonts against `--vscode-*` variables in 3 themes (dark default, light default, one high-contrast).
 - [x] Settings UI descriptions finalized for all `talkthrough.*` settings.
-- [x] *(added during Phase 4, not in the original plan)* Global `alt+left` / `alt+right` / `alt+escape` keybindings while a tour is active, and an allowlist restricting which commands the panel may invoke from an error action.
+- [x] *(added during Phase 4, not in the original plan)* An allowlist restricting which commands the panel may invoke from an error action. *(Global `alt+left`/`alt+right` keybindings were also added here and have since been **removed**: scoped only to `talkthrough.tourActive`, they hijacked those keys across the whole window — including other extensions' chat inputs — for as long as a tour stayed loaded. The plan said "while panel focused", which the webview already handles.)*
 
 ⛔ **REVIEW CHECKPOINT 4** — Human evaluates look & feel against "polished coworker" bar in all 3 themes; walks each error state deliberately. Approve to continue.
 

@@ -237,23 +237,6 @@
         "contents": "No tour yet.\n\nGenerate a narrated walkthrough of your recent changes.\n[Explain recent changes](command:talkthrough.explainChanges)",
         "when": "!talkthrough.tourActive"
       }
-    ],
-    "keybindings": [
-      {
-        "command": "talkthrough.nextSegment",
-        "key": "alt+right",
-        "when": "talkthrough.tourActive"
-      },
-      {
-        "command": "talkthrough.previousSegment",
-        "key": "alt+left",
-        "when": "talkthrough.tourActive"
-      },
-      {
-        "command": "talkthrough.stopTour",
-        "key": "alt+escape",
-        "when": "talkthrough.tourActive"
-      }
     ]
   },
   "scripts": {

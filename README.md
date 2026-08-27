@@ -18,6 +18,16 @@ and highlighting the exact snippets the narration refers to.
 3. A text-to-speech engine synthesizes the narration.
 4. The player panel plays it back while the editor follows along.
 
+## Controlling a tour
+
+Step through a tour from the buttons in the editor title bar, the Talkthrough
+sidebar, or the player panel. Inside the panel, space plays and pauses and the
+arrow keys step between segments.
+
+Talkthrough deliberately binds no global keyboard shortcuts: keys like
+<kbd>Alt</kbd>+<kbd>Left</kbd> belong to whatever you are typing into. To bind
+your own, open Keyboard Shortcuts and search for `talkthrough`.
+
 ## Privacy and credentials
 
 - Talkthrough never bundles, downloads, or installs a vendor CLI. It only detects and
