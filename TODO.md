@@ -37,7 +37,7 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 
 - [x] `EditorChoreographer`: for a segment — open file, `revealRange` centered, apply highlight `TextEditorDecorationType` (ThemeColor-based), clear previous decorations. Handle stale line ranges (file changed since generation): clamp + warn.
 - [x] Tour state machine in the host: idle → playing(segmentIndex) → paused → done; commands next/prev/stop.
-- [x] Temporary controls (before audio exists): status-bar buttons or quick-pick to step through segments manually.
+- [x] Temporary controls (before audio exists): status-bar buttons or quick-pick to step through segments manually. *(Built as editor title-bar buttons plus a status-bar position readout — the status bar alone proved too easy to miss.)*
 - [x] Optional `talkthrough.openDiffView`: show `vscode.diff` for the segment's file instead of the plain document.
 - [x] *(added during Phase 2, not in the original plan)* Activity-bar container with a `talkthrough.segments` tree view: the tour as a navigable list with kind icons, selection following the current segment, and prev/next/stop in the view title. Stepping controls also contributed to the editor title bar.
 
@@ -50,9 +50,10 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 - [x] `TTSEngine` interface `synthesize(text, voice) => audioFile`; cache keyed by hash(text+voice+engine) in `globalStorageUri`.
 - [x] Engine: `system` — macOS `say` → WAV (document Windows/Linux gap for now; fail with actionable message pointing to API TTS).
 - [x] Engine: `openai` TTS via user key in SecretStorage.
-- [x] Synthesis pipeline: on tour start, synthesize segment 1 immediately, remaining segments in background; progress notification.
+- [x] Synthesis pipeline: on tour start, synthesize segment 1 immediately, remaining segments in background; progress notification. *(Progress is shown in the player panel rather than as a VS Code notification — a toast per batch during playback would be noise.)*
 - [x] Webview player v1: `<audio>` element fed via `asWebviewUri`, play/pause/next/prev, playback speed. Host↔webview `postMessage` protocol: host pushes `loadSegment`, webview reports `ended`/`seeked`/user actions.
 - [x] Sync: webview `ended` → host advances segment → choreographer moves editor → host pushes next audio. First playback must be user-initiated (autoplay policy).
+- [x] *(added during Phase 3, not in the original plan)* `talkthrough.tts` and `talkthrough.voice` settings, plus a **Talkthrough: Choose narration voice** command that lists installed voices best-first and previews each on highlight. Added because the macOS default is a *compact* voice and sounds rough; the picker names the free Enhanced/Premium download.
 
 ⛔ **REVIEW CHECKPOINT 3** — Human plays a full narrated tour end-to-end. Bar: audio and highlights never desync, pause/resume works, no double-audio, cache makes replay instant. Approve to continue.
 
@@ -67,6 +68,7 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 - [x] Empty/error states in-panel: no git repo, no diff, backend missing (with "how to fix" links), generation failed.
 - [x] Theming pass: audit all colors/fonts against `--vscode-*` variables in 3 themes (dark default, light default, one high-contrast).
 - [x] Settings UI descriptions finalized for all `talkthrough.*` settings.
+- [x] *(added during Phase 4, not in the original plan)* Global `alt+left` / `alt+right` / `alt+escape` keybindings while a tour is active, and an allowlist restricting which commands the panel may invoke from an error action.
 
 ⛔ **REVIEW CHECKPOINT 4** — Human evaluates look & feel against "polished coworker" bar in all 3 themes; walks each error state deliberately. Approve to continue.
 
@@ -75,11 +77,12 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 ## Phase 5 — Hardening & second backend
 
 - [x] Backend: `codex-cli` — detect `codex` on PATH, invoke `codex exec` with JSON-only prompt, same validate/retry path. *(Verified end to end against codex-cli 0.149.1: valid TourScript, line ranges correct.)*
-- [x] Large-changeset strategy: over N changed files → two-pass generation (per-file summaries → tour over summaries). Verify on a 50-file diff.
+- [x] Large-changeset strategy: over N changed files → two-pass generation (per-file summaries → tour over summaries). Verify on a 50-file diff. *(Trigger and batching verified against a real 77-file diff: 10 batches, every file preserved, all within budget. A full two-pass **generation** has not been run end to end against a model — worth doing at the checkpoint.)*
 - [x] Optional Claude Code transcript enrichment (`talkthrough.useAgentTranscript`): locate latest session JSONL for the workspace, extract assistant reasoning, feed to generator. Degrade gracefully if absent.
 - [x] Concurrency & cancellation: cancel a running generation/synthesis when a new tour starts or VS Code closes; no orphaned child processes.
 - [ ] Cross-platform check on Linux (extension host paths, child_process, no `say` — verify error path) — use the Ubuntu server for this. *(CI now runs the full suite on ubuntu-latest, covering the collector against real git, child-process handling and the no-`say` error path. The Extension Development Host run itself still needs a Linux machine.)*
 - [x] Unit test sweep for: schema, diff truncation, prompt assembly, cache keys, message protocol reducers.
+- [x] *(added during Phase 5, not in the original plan)* `TourBackend.complete()` for the summarization pass; a run coordinator so starting a tour cancels the one before it; child-process tracking killed on deactivate; CI extended to run the suite on Linux as well as macOS.
 
 ⛔ **REVIEW CHECKPOINT 5** — Human tests: codex backend parity, a huge diff, transcript-enriched tour vs. plain-diff tour (side by side — is the reasoning narration noticeably better?), and a Linux run. Approve to continue.
 
@@ -89,7 +92,7 @@ Conventions: TypeScript strict mode, esbuild bundling, unit tests for pure logic
 
 - [ ] Product README: hero GIF/screencast of a tour, feature list, backend setup instructions per vendor (explicit: "uses YOUR installed CLI and YOUR subscription; we never handle your login"), settings reference, privacy note (all local, code leaves the machine only to the backend the user chose).
 - [ ] Icon + marketplace gallery banner; display name "Talkthrough"; keywords: ai, code review, agent, diff, voice, walkthrough.
-- [ ] `package.json` metadata: publisher, repository, categories, license; bundle size sanity check (< 5 MB, no node_modules leakage).
+- [ ] `package.json` metadata: publisher, repository, categories, license; bundle size sanity check (< 5 MB, no node_modules leakage). *(Already done: `publisher` is `cstruckmann`, `repository` and `license` are set. Still outstanding: `categories` is the placeholder `["Other"]`, no `keywords`, no `icon`, and the bundle has not been size-checked.)*
 - [ ] Create publisher account (Azure DevOps / vsce) and Open VSX account; store tokens as repo secrets.
 - [ ] Release CI: on tag → build, package `.vsix`, publish to both registries, attach to GitHub release.
 - [ ] Manual smoke test of the marketplace-installed build (not the dev host) on a clean VS Code profile, and once in Cursor via Open VSX.
